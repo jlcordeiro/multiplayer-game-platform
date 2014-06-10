@@ -1,12 +1,16 @@
-GCC := g++
+GCC := gcc
+GPP := g++
 
 all: main
 
-server: server.cpp server.h
-	$(GCC) server.cpp -c
+psocket: psocket.c psocket.h
+	$(GCC) psocket.c -c
+
+server: psocket server.cpp server.h
+	$(GPP) server.cpp -c
 
 main: server
-	$(GCC) main.cpp server.o -o main
+	$(GPP) main.cpp server.o psocket.o -o main
 
 clean:
 	rm server.o main

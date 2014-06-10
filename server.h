@@ -1,4 +1,8 @@
+#ifndef SERVER_H
+#define SERVER_H
+
 #include <string>
+#include "psocket.h"
 
 class TCPServer {
     private:
@@ -44,3 +48,5 @@ class TCPServer {
          */
         int go();
 };
+
+#endif
