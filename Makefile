@@ -9,7 +9,13 @@ psocket: psocket.c psocket.h
 server: psocket server.cpp server.h
 	$(GPP) server.cpp -c
 
-main: server
+user: user.cpp user.h
+	$(GPP) user.cpp -c
+
+room: user room.cpp room.h
+	$(GPP) room.cpp -c
+
+main: server room user
 	$(GPP) main.cpp server.o psocket.o -o main
 
 clean:
