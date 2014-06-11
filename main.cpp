@@ -1,5 +1,5 @@
 #include <unistd.h>
-#include "server.h"
+#include "tcpsocket.h"
 
 int main(int argc, const char *argv[])
 {
@@ -9,7 +9,7 @@ int main(int argc, const char *argv[])
 
     const char* PORT = argv[1];
 
-    TCPServer server(PORT);
+    TCPSocket server(PORT);
 
     for(;;) {
         server.go();

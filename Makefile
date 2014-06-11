@@ -6,8 +6,8 @@ all: main
 psocket: psocket.c psocket.h
 	$(GCC) psocket.c -c
 
-server: psocket server.cpp server.h
-	$(GPP) server.cpp -c
+tcpsocket: psocket tcpsocket.cpp tcpsocket.h
+	$(GPP) tcpsocket.cpp -c
 
 user: user.cpp user.h
 	$(GPP) user.cpp -c
@@ -15,8 +15,8 @@ user: user.cpp user.h
 room: user room.cpp room.h
 	$(GPP) room.cpp -c
 
-main: server room user
-	$(GPP) main.cpp server.o psocket.o -o main
+main: tcpsocket room user
+	$(GPP) main.cpp tcpsocket.o psocket.o -o main
 
 clean:
-	rm server.o main
+	rm tcpsocket.o main

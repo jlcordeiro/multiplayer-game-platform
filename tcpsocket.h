@@ -4,9 +4,9 @@
 #include <string>
 #include "psocket.h"
 
-class TCPServer {
+class TCPSocket {
     private:
-        TCPServer();
+        TCPSocket();
 
         /** \brief Listening socket descriptor. */
         int     _listener;
@@ -41,7 +41,7 @@ class TCPServer {
     public:
         enum {BUF_SIZE = 1024};
 
-        TCPServer(const char* port);
+        TCPSocket(const char* port);
 
         /**
          * \brief Check all the file descriptors and act accordingly.

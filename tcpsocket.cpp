@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "server.h"
+#include "tcpsocket.h"
 
-int TCPServer::handle_new_connection()
+int TCPSocket::handle_new_connection()
 {
     struct sockaddr_storage remoteaddr; // client address
     socklen_t addrlen = sizeof remoteaddr;
@@ -27,7 +27,7 @@ int TCPServer::handle_new_connection()
     return newfd;
 }
 
-int TCPServer::broadcast(const char* buf, size_t nbytes) const
+int TCPSocket::broadcast(const char* buf, size_t nbytes) const
 {
     int failed = 0;
 
@@ -42,12 +42,12 @@ int TCPServer::broadcast(const char* buf, size_t nbytes) const
     return failed;
 }
 
-int TCPServer::broadcast(const std::string& msg) const
+int TCPSocket::broadcast(const std::string& msg) const
 {
     return broadcast(msg.c_str(), msg.length());
 }
 
-void TCPServer::handle_recv_data(int socket)
+void TCPSocket::handle_recv_data(int socket)
 {
     char buf[BUF_SIZE];
     size_t nbytes;
@@ -62,7 +62,7 @@ void TCPServer::handle_recv_data(int socket)
     }
 }
 
-TCPServer::TCPServer(const char* port)
+TCPSocket::TCPSocket(const char* port)
     :   _listener(create_socket(port)),
         _fdmax(_listener),
         _running(_listener != -1)
@@ -72,7 +72,7 @@ TCPServer::TCPServer(const char* port)
     FD_SET(_listener, &_fds);
 }
 
-int TCPServer::go()
+int TCPSocket::go()
 {
     fd_set read_fds; // temp file descriptor list for select()
     FD_ZERO(&read_fds);
