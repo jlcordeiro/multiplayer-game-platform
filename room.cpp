@@ -1,16 +1,16 @@
 #include "room.h"
 
-Room::Room(long int id, string name)
-    : _id(id),
-    _name(name),
-    _max_users(),
-    _user_count(std::numeric_limits<long int>::max())
+Room::Room(int fd)
+    : _fd(fd),
+    _name(""),
+    _max_users(numeric_limits<long int>::max()),
+    _user_count(0)
 {
 }
 
-long int Room::getId() const
+int Room::getFd() const
 {
-    return _id;
+    return _fd;
 }
 
 string Room::getName() const
@@ -45,17 +45,21 @@ bool Room::containsVariable(string name) const
 
 void Room::addUser(shared_ptr<User> user)
 {
-    _users[user->getId()] = user;
+    if (!containsUser(user)) {
+        _user_count++;
+    }
+
+    _users[user->getFd()] = user;
 }
 
 bool Room::containsUser(shared_ptr<User> user) const
 {
-    return (_users.find(user->getId()) != _users.end());
+    return (_users.find(user->getFd()) != _users.end());
 }
 
 void Room::removeUser(shared_ptr<User> user)
 {
-    _users.erase(user->getId());
+    _users.erase(user->getFd());
 }
 
 shared_ptr<User> Room::getUserById(long int id)

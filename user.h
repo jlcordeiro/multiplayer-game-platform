@@ -8,8 +8,8 @@ using namespace std;
 class User
 {
     public:
-        User(long int id, string name);
-        long int getId() const;
+        User(long int fd);
+        long int getFd() const;
         string getName() const;
 
         string getVariable(string name) const;
@@ -19,7 +19,7 @@ class User
 
     protected:
 
-        long int _id;
+        long int _fd;
         string _name;
         map<string,string> _variables;
 };

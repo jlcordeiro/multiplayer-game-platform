@@ -1,13 +1,13 @@
 #include "user.h"
 
-User::User(long int id, string name)
-    : _id(id), _name(name)
+User::User(long int fd)
+    : _fd(fd)
 {
 }
 
-long int User::getId() const
+long int User::getFd() const
 {
-    return _id;
+    return _fd;
 }
 
 string User::getName() const

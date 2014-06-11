@@ -9,8 +9,11 @@ using namespace std;
 class Room
 {
     public:
-        Room(long int id, string name);
-        long int getId() const;
+        Room(int fd);
+
+        int getFd() const;
+
+        void setName();
         string getName() const;
 
         const map<string, string>& getVariables() const;
@@ -30,7 +33,7 @@ class Room
         shared_ptr<User> getUserById(long int id);
 
     protected:
-        long int _id;
+        int _fd;
         string _name;
         map<long int,shared_ptr<User> > _users;
         map<string,string> _variables;

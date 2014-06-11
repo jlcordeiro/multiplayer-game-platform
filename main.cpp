@@ -1,20 +1,16 @@
 #include <unistd.h>
-#include "tcpsocket.h"
+#include "server.h"
 
 int main(int argc, const char *argv[])
 {
-    if (argc != 2) {
+    if (argc != 3) {
         return 1;
     }
 
-    const char* PORT = argv[1];
+    const char* RPORT = argv[1];
+    const char* UPORT = argv[2];
 
-    TCPSocket server(PORT);
-
-    for(;;) {
-        server.go();
-        usleep(100000);
-    }
+    Server server(RPORT, UPORT);
 
     return 0;
 }
