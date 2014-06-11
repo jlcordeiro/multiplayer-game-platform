@@ -1,4 +1,5 @@
 #include "psocket.h"
+#include <unistd.h>
 #include <string.h>
 
 void *get_in_addr(struct sockaddr *sa)
