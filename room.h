@@ -2,6 +2,7 @@
 #define __ROOM_H__
 
 #include "user.h"
+#include <memory>
 #include <string>
 #include <map>
 using namespace std;

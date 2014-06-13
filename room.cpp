@@ -1,9 +1,10 @@
 #include "room.h"
+#include <limits>
 
 Room::Room(int fd)
     : _fd(fd),
     _name(""),
-    _max_users(numeric_limits<long int>::max()),
+    _max_users(std::numeric_limits<long int>::max()),
     _user_count(0)
 {
 }

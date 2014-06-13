@@ -61,11 +61,14 @@ class TCPSocket {
         int go();
 };
 
+typedef function<void(shared_ptr<Room>, const string&)> room_data_fn_t;
+typedef function<void(shared_ptr<User>, const string&)> user_data_fn_t;
 
 class RoomSocket : public TCPSocket
 {
 private:
     map<int,shared_ptr<Room> >& _rooms;
+    weak_ptr<room_data_fn_t> _server_data_fn;
 
 public:
     RoomSocket(const char* port, map<int,shared_ptr<Room> >& rooms)
@@ -97,13 +100,18 @@ public:
     void handle_select_error()
     {
     }
+
+    void set_process_data_fn(shared_ptr<room_data_fn_t> f)
+    {
+        _server_data_fn = f;
+    }
 };
 
 class UserSocket : public TCPSocket
 {
 private:
     map<int,shared_ptr<User> >& _users;
-    function<void(shared_ptr<User> user, const string& data)> _server_data_fn;
+    weak_ptr<user_data_fn_t> _server_data_fn;
 
 public:
     UserSocket(const char* port, map<int,shared_ptr<User> >& users)
@@ -135,7 +143,7 @@ public:
     {
     }
 
-    void set_process_data_fn(function<void(shared_ptr<User> user, const string& data)> f)
+    void set_process_data_fn(shared_ptr<user_data_fn_t> f)
     {
         _server_data_fn = f;
     }

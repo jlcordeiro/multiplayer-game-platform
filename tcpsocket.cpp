@@ -100,6 +100,13 @@ int TCPSocket::go()
 void RoomSocket::handle_data(int fd, const char* what, size_t nbytes)
 {
     cout << "Received " << what << " from [" << fd << "]." << endl;
+
+    shared_ptr<Room> room = _rooms[fd];;
+
+    if (auto pfn = _server_data_fn.lock()) {
+        (*pfn)(room, string(what));
+    }
+
     std::string err;
     if (isSetName(string(what), err)) {
         _rooms[fd]->setName(string(what));
@@ -109,9 +116,12 @@ void RoomSocket::handle_data(int fd, const char* what, size_t nbytes)
 void UserSocket::handle_data(int fd, const char* what, size_t nbytes)
 {
     cout << "Received " << what << " from [" << fd << "]." << endl;
-        
+
     shared_ptr<User> user = _users[fd];;
-    _server_data_fn(user, string(what));
+
+    if (auto pfn = _server_data_fn.lock()) {
+        (*pfn)(user, string(what));
+    }
 
     std::string err;
     if (isSetName(string(what), err)) {
