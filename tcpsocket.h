@@ -89,8 +89,12 @@ public:
         _rooms.erase(fd);
     }
 
-    void handle_data(int fd, const char* what, size_t nbytes);
-
+    void handle_data(int fd, const char* what, size_t nbytes)
+    {
+        if (auto pfn = _server_data_fn.lock()) {
+            (*pfn)(_rooms[fd], string(what));
+        }
+    }
 
     void handle_send_error(int fd, const char* what, size_t nbytes) const
     {
@@ -132,7 +136,12 @@ public:
         _users.erase(fd);
     }
 
-    void handle_data(int fd, const char* what, size_t nbytes);
+    void handle_data(int fd, const char* what, size_t nbytes)
+    {
+        if (auto pfn = _server_data_fn.lock()) {
+            (*pfn)(_users[fd], string(what));
+        }
+    }
 
     void handle_send_error(int fd, const char* what, size_t nbytes) const
     {

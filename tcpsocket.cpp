@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "messages.h"
 #include "tcpsocket.h"
 
 int TCPSocket::recv_connection()
@@ -95,36 +94,4 @@ int TCPSocket::go()
     }
 
     return 0;
-}
-
-void RoomSocket::handle_data(int fd, const char* what, size_t nbytes)
-{
-    cout << "Received " << what << " from [" << fd << "]." << endl;
-
-    shared_ptr<Room> room = _rooms[fd];;
-
-    if (auto pfn = _server_data_fn.lock()) {
-        (*pfn)(room, string(what));
-    }
-
-    std::string err;
-    if (isSetName(string(what), err)) {
-        _rooms[fd]->setName(string(what));
-    }
-}
-
-void UserSocket::handle_data(int fd, const char* what, size_t nbytes)
-{
-    cout << "Received " << what << " from [" << fd << "]." << endl;
-
-    shared_ptr<User> user = _users[fd];;
-
-    if (auto pfn = _server_data_fn.lock()) {
-        (*pfn)(user, string(what));
-    }
-
-    std::string err;
-    if (isSetName(string(what), err)) {
-        user->setName(string(what));
-    }
 }

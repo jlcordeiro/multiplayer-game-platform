@@ -18,6 +18,9 @@ Server::Server(const char* rport, const char* uport)
     for(;;) {
         _users_socket.go();
         _rooms_socket.go();
+
+
+
         usleep(100000);
     }
 }
@@ -25,9 +28,28 @@ Server::Server(const char* rport, const char* uport)
 void Server::process_room_data(shared_ptr<Room> room, const string& data)
 {
     cout << "Received room data on the server side! " << data  << endl;
+
+    std::string err;
+    if (isSetName(data, err)) {
+        room->setName(data);
+    }
 }
 
 void Server::process_user_data(shared_ptr<User> user, const string& data)
 {
     cout << "Received user data on the server side! " << data  << endl;
+
+    std::string err;
+
+    if (isSetName(data, err)) {
+        user->setName(data);
+        return;
+    }
+
+    if (isJoin(data, err)) {
+        auto room = findByName<Room>(_rooms, data);
+        if (!room->containsUser(user)) {
+            room->addUser(user);
+        }
+    }
 }
