@@ -12,5 +12,5 @@ bool isSetName(const std::string& msg, std::string& err)
 bool isJoin(const std::string& msg, std::string& err)
 {
     auto json = Json::parse(msg, err);
-    return ((json != nullptr) && json.has_shape(set_name_shape, err));
+    return ((json != nullptr) && json.has_shape(join_shape, err));
 }

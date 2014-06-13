@@ -1,0 +1,4 @@
+{"setName":"joao"}
+{"setName":"room1"}
+
+{"join":"room1"}

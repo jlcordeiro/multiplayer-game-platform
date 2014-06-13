@@ -19,36 +19,46 @@ Server::Server(const char* rport, const char* uport)
         _users_socket.go();
         _rooms_socket.go();
 
+        for (auto u : _users) {
+            cout << "<<< [U] " << u.second->getName() << endl;
+        }
 
+        for (auto r : _rooms) {
+            cout << "<<< [R] " << r.second->getName() << " <" << r.second->getUserCount() << ">" << endl;
+        }
 
-        usleep(100000);
+        usleep(1000000);
     }
 }
 
 void Server::process_room_data(shared_ptr<Room> room, const string& data)
 {
-    cout << "Received room data on the server side! " << data  << endl;
+    cout << "<< " << data  << endl;
 
     std::string err;
+    auto json = Json::parse(data, err);
+
     if (isSetName(data, err)) {
-        room->setName(data);
+        room->setName(json["setName"].string_value());
     }
+
 }
 
 void Server::process_user_data(shared_ptr<User> user, const string& data)
 {
-    cout << "Received user data on the server side! " << data  << endl;
+    cout << "<< " << data  << endl;
 
     std::string err;
+    auto json = Json::parse(data, err);
 
     if (isSetName(data, err)) {
-        user->setName(data);
+        user->setName(json["setName"].string_value());
         return;
     }
 
     if (isJoin(data, err)) {
-        auto room = findByName<Room>(_rooms, data);
-        if (!room->containsUser(user)) {
+        auto room = findByName<Room>(_rooms, json["join"].string_value());
+        if (room && !room->containsUser(user)) {
             room->addUser(user);
         }
     }
