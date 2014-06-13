@@ -11,6 +11,7 @@ class User
         User(long int fd);
         long int getFd() const;
         string getName() const;
+        void setName(string value);
 
         string getVariable(string name) const;
         void setVariable(string name, string value);

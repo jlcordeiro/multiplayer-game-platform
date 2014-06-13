@@ -18,6 +18,11 @@ string Room::getName() const
     return _name;
 }
 
+void Room::setName(string value)
+{
+    _name = value;
+}
+
 long int Room::getUserCount() const
 {
     return _user_count;

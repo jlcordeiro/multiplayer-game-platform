@@ -1,27 +1,18 @@
 #ifndef TCPSOCKET_H
 #define TCPSOCKET_H
 
+#include <map>
 #include <string>
+#include <iostream>
+#include "user.h"
+#include "room.h"
 #include "psocket.h"
-
-/** \brief Handler interface that implements the
- * handling of each event that can occur on the socket.
- */
-class TCPSocketHandler {
-    public:
-        virtual void handle_connect(int fd) = 0;
-        virtual void handle_disconnect(int fd) = 0;
-        virtual void handle_data(int fd, const char* what, size_t nbytes) = 0;
-        virtual void handle_send_error(int fd, const char* what, size_t nbytes) = 0;
-        virtual void handle_select_error() = 0;
-};
+using namespace std;
 
 class TCPSocket {
     private:
         TCPSocket();
 
-        /** \brief Handler for the different event that can occur. */
-        TCPSocketHandler*   _handler;
         /** \brief Listening socket descriptor. */
         int                 _listener;
         /** \brief File descriptor list. */
@@ -42,6 +33,7 @@ class TCPSocket {
          */
         void recv_data(int socket);
 
+    protected:
         /**
          * \brief Send a message to all the file descriptors.
          */
@@ -52,15 +44,101 @@ class TCPSocket {
          */
         void broadcast(const std::string& msg) const;
 
+        virtual void handle_connect(int fd) = 0;
+        virtual void handle_disconnect(int fd) = 0;
+        virtual void handle_data(int fd, const char* what, size_t nbytes) = 0;
+        virtual void handle_send_error(int fd, const char* what, size_t nbytes) const = 0;
+        virtual void handle_select_error() = 0;
+
     public:
         enum {BUF_SIZE = 1024};
 
-        TCPSocket(const char* port, TCPSocketHandler* handler);
+        TCPSocket(const char* port);
 
         /**
          * \brief Check all the file descriptors and act accordingly.
          */
         int go();
+};
+
+
+class RoomSocket : public TCPSocket
+{
+private:
+    map<int,shared_ptr<Room> >& _rooms;
+
+public:
+    RoomSocket(const char* port, map<int,shared_ptr<Room> >& rooms)
+        : TCPSocket(port),
+          _rooms(rooms)
+    {
+    }
+
+    void handle_connect(int fd)
+    {
+        cout << "Adding room [" << fd << "]." << endl;
+        _rooms[fd] = shared_ptr<Room>(new Room(fd));
+    }
+
+    void handle_disconnect(int fd)
+    {
+        cout << "Removing room [" << fd << "]." << endl;
+        _rooms.erase(fd);
+    }
+
+    void handle_data(int fd, const char* what, size_t nbytes);
+
+
+    void handle_send_error(int fd, const char* what, size_t nbytes) const
+    {
+        cout << "Failed to send " << what << " to [" << fd << "]." << endl;
+    }
+
+    void handle_select_error()
+    {
+    }
+};
+
+class UserSocket : public TCPSocket
+{
+private:
+    map<int,shared_ptr<User> >& _users;
+    function<void(shared_ptr<User> user, const string& data)> _server_data_fn;
+
+public:
+    UserSocket(const char* port, map<int,shared_ptr<User> >& users)
+        : TCPSocket(port),
+          _users(users)
+    {
+    }
+
+    void handle_connect(int fd)
+    {
+        cout << "Adding user [" << fd << "]." << endl;
+        _users[fd] = shared_ptr<User>(new User(fd));
+    }
+
+    void handle_disconnect(int fd)
+    {
+        cout << "Removing user [" << fd << "]." << endl;
+        _users.erase(fd);
+    }
+
+    void handle_data(int fd, const char* what, size_t nbytes);
+
+    void handle_send_error(int fd, const char* what, size_t nbytes) const
+    {
+        cout << "Failed to send " << what << " to user [" << fd << "]." << endl;
+    }
+
+    void handle_select_error()
+    {
+    }
+
+    void set_process_data_fn(function<void(shared_ptr<User> user, const string& data)> f)
+    {
+        _server_data_fn = f;
+    }
 };
 
 #endif

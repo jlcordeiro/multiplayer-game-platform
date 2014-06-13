@@ -13,7 +13,7 @@ class Room
 
         int getFd() const;
 
-        void setName();
+        void setName(string value);
         string getName() const;
 
         const map<string, string>& getVariables() const;

@@ -15,6 +15,11 @@ string User::getName() const
     return _name;
 }
 
+void User::setName(string value)
+{
+    _name = value;
+}
+
 bool User::containsVariable(string name) const
 {
     return (_variables.find(name) != _variables.end());

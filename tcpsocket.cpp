@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "messages.h"
 #include "tcpsocket.h"
 
 int TCPSocket::recv_connection()
@@ -16,7 +17,7 @@ int TCPSocket::recv_connection()
             _fdmax = newfd;
         }
 
-        _handler->handle_connect(newfd);
+        handle_connect(newfd);
     }
 
     return newfd;
@@ -27,7 +28,7 @@ void TCPSocket::broadcast(const char* buf, size_t nbytes) const
     for(int j = 0; j <= _fdmax; j++) {
         if (FD_ISSET(j, &_fds) && j != _listener) {
             if (send(j, buf, nbytes, 0) == -1) {
-                _handler->handle_send_error(j, buf, nbytes);
+                handle_send_error(j, buf, nbytes);
             }
         }
     }
@@ -43,17 +44,17 @@ void TCPSocket::recv_data(int socket)
     char buf[BUF_SIZE];
     size_t nbytes;
     if ((nbytes = recv(socket, buf, sizeof buf, 0)) <= 0) {
-        _handler->handle_disconnect(socket);
+        handle_disconnect(socket);
         close(socket);
         FD_CLR(socket, &_fds); // remove from master set
     } else {
-        _handler->handle_data(socket, buf, nbytes);
+        buf[nbytes-2] = '\0'; // remove \r\n
+        handle_data(socket, buf, nbytes);
     }
 }
 
-TCPSocket::TCPSocket(const char* port, TCPSocketHandler* handler)
-    :   _handler(handler),
-        _listener(create_socket(port)),
+TCPSocket::TCPSocket(const char* port)
+    :   _listener(create_socket(port)),
         _fdmax(_listener),
         _running(_listener != -1)
 {
@@ -75,7 +76,7 @@ int TCPSocket::go()
     int select_res = select(_fdmax+1, &read_fds, NULL, NULL, &timeout);
     if (select_res < 1) {
         if (select_res == -1) {
-            _handler->handle_select_error();
+            handle_select_error();
         }
         return select_res;
     }
@@ -94,4 +95,26 @@ int TCPSocket::go()
     }
 
     return 0;
+}
+
+void RoomSocket::handle_data(int fd, const char* what, size_t nbytes)
+{
+    cout << "Received " << what << " from [" << fd << "]." << endl;
+    std::string err;
+    if (isSetName(string(what), err)) {
+        _rooms[fd]->setName(string(what));
+    }
+}
+
+void UserSocket::handle_data(int fd, const char* what, size_t nbytes)
+{
+    cout << "Received " << what << " from [" << fd << "]." << endl;
+        
+    shared_ptr<User> user = _users[fd];;
+    _server_data_fn(user, string(what));
+
+    std::string err;
+    if (isSetName(string(what), err)) {
+        user->setName(string(what));
+    }
 }
