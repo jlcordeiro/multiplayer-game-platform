@@ -3,8 +3,11 @@
 
 #include <string>
 #include <map>
+#include <json11/json11.hpp>
 #include "tcpsocket.h"
 using namespace std;
+
+typedef json11::Json Variable;
 
 class Entity
 {
@@ -28,30 +31,32 @@ public:
         return _name;
     }
 
-    int send(const string& msg) const
-    {
-        return ::send(_fd, msg);
-    }
-
     void setName(string value)
     {
         _name = value;
     }
 
-    string getVariable(string name) const
+    int send(const string& msg) const
     {
-        std::map<string,string>::const_iterator it = _variables.find(name);
+        return ::send(_fd, msg);
+    }
+
+    Variable getVariable(string name) const
+    {
+        auto it = _variables.find(name);
 
         if (it == _variables.end()) {
-            return NULL;
+            return nullptr;
         }
 
         return it->second;
     }
 
-    void setVariable(string name, string value)
+    void setVariable(string name, Variable value)
     {
-        _variables[name] = value;
+        if (getVariable(name) != value) {
+            _variables[name] = value;
+        }
     }
 
     bool containsVariable(string name) const
@@ -64,7 +69,7 @@ public:
         _variables.erase(name);
     }
 
-    const map<string, string>& getVariables() const
+    const map<string, Variable>& getVariables() const
     {
         return _variables;
     }
@@ -73,7 +78,7 @@ protected:
     unsigned long _id;
     long _fd;
     string _name;
-    map<string,string> _variables;
+    map<string,Variable> _variables;
 };
 
 #endif

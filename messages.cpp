@@ -31,6 +31,11 @@ bool isMaxUsers(const std::string& msg, std::string& err)
     return has_shape(msg, maxusers_shape, err);
 }
 
+bool isVariable(const std::string& msg, std::string& err)
+{
+    return msg[0] == '#';
+}
+
 Json getUserJoin(const User& u)
 {
     return Json(Json::object({{"UserJoin", u.getName()}}));

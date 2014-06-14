@@ -35,15 +35,31 @@ Server::Server(const char* rport, const char* uport)
 
         for (auto u : _users) {
             cout << "<<< [U] " << u.second->getName() << endl;
+            for (auto varp : u.second->getVariables()) {
+                cout << "      - " << varp.first << " => " << varp.second.dump() << endl;
+            }
         }
 
         for (auto rp : _rooms) {
             shared_ptr<Room> r = rp.second;
             cout << "<<< [R] " << r->getName()
                  << " <" << r->getUserCount() << "/" << r->getMaxUsers() << ">" << endl;
+            for (auto varp : rp.second->getVariables()) {
+                cout << "      - " << varp.first << " => " << varp.second.dump() << endl;
+            }
         }
 
         usleep(1000000);
+    }
+}
+
+static void processVariables(shared_ptr<Entity> entity, Json json)
+{
+    string err;
+    for (auto & i : json.object_items()) {
+        if (isVariable(i.first, err)) {
+            entity->setVariable(i.first.substr(1), i.second);
+        }
     }
 }
 
@@ -65,6 +81,8 @@ void Server::handle_room_data(int fd, const string& data)
         room->setMaxUsers(json["maxUsers"].int_value());
         return;
     }
+
+    processVariables(room, json);
 }
 
 void Server::handle_user_data(int fd, const string& data)
@@ -97,6 +115,8 @@ void Server::handle_user_data(int fd, const string& data)
         }
         return;
     }
+
+    processVariables(user, json);
 }
 
 void Server::handle_room_connect(int fd)

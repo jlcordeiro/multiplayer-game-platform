@@ -6,3 +6,12 @@
 
 {"join":"room1"}
 {"quit":"room1"}
+
+{"#rounds":4} 
+{"#balance":150.0}
+{"#status":"feeling good!"}
+{"#numberss":[3, 6, 1]}
+{"#bets":[12.5, 7.7, 992.1]}
+{"#friends":["jack", "mark"]}
+
+{"#lol1":2,"#lol5":"bla"}
