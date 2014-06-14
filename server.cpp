@@ -59,7 +59,13 @@ void Server::process_user_data(shared_ptr<User> user, const string& data)
     if (isJoin(data, err)) {
         auto room = findByName<Room>(_rooms, json["join"].string_value());
         if (room && !room->containsUser(user)) {
+            auto json = getUserJoin(*user);
+
             room->addUser(user);
+            for (auto u : room->getUsers())
+            {
+                u.second->send(json.dump());
+            }
         }
     }
 }

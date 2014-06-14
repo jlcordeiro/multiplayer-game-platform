@@ -1,27 +1,11 @@
 #include "room.h"
 #include <limits>
 
-Room::Room(int fd)
-    : _fd(fd),
-    _name(""),
+Room::Room(long int fd)
+    : Entity(fd),
     _max_users(std::numeric_limits<long int>::max()),
     _user_count(0)
 {
-}
-
-int Room::getFd() const
-{
-    return _fd;
-}
-
-string Room::getName() const
-{
-    return _name;
-}
-
-void Room::setName(string value)
-{
-    _name = value;
 }
 
 long int Room::getUserCount() const
@@ -39,38 +23,28 @@ void Room::setMaxUsers(long int value)
     _max_users = value;
 }
 
-const map<string, string>& Room::getVariables() const
-{
-    return _variables;
-}
-
-bool Room::containsVariable(string name) const
-{
-    return (_variables.find(name) != _variables.end());
-}
-
 void Room::addUser(shared_ptr<User> user)
 {
     if (!containsUser(user)) {
         _user_count++;
     }
 
-    _users[user->getFd()] = user;
+    _users[user->getId()] = user;
 }
 
 bool Room::containsUser(shared_ptr<User> user) const
 {
-    return (_users.find(user->getFd()) != _users.end());
+    return (_users.find(user->getId()) != _users.end());
 }
 
 void Room::removeUser(shared_ptr<User> user)
 {
-    _users.erase(user->getFd());
+    _users.erase(user->getId());
 }
 
 shared_ptr<User> Room::getUserById(long int id)
 {
-    map<long int,shared_ptr<User> >::iterator it = _users.find(id);
+    auto it = _users.find(id);
 
     if (it == _users.end()) {
         return shared_ptr<User>(NULL);
@@ -79,24 +53,7 @@ shared_ptr<User> Room::getUserById(long int id)
     return it->second;
 }
 
-void Room::setVariable(string name, string value)
+const map<long int, shared_ptr<User> >& Room::getUsers() const
 {
-    _variables[name] = value;
+    return _users;
 }
-
-void Room::removeVariable(string name)
-{
-    _variables.erase(name);
-}
-
-string Room::getVariable(string name) const
-{
-    std::map<string,string>::const_iterator it = _variables.find(name);
-
-    if (it == _variables.end()) {
-        return NULL;
-    }
-
-    return it->second;
-}
-

@@ -16,10 +16,7 @@ psocket: psocket.c psocket.h
 tcpsocket: psocket tcpsocket.cpp tcpsocket.h messages
 	$(GPP) tcpsocket.cpp -c $(IPATH)
 
-user: user.cpp user.h
-	$(GPP) user.cpp -c
-
-room: user room.cpp room.h
+room: room.cpp room.h user.h entity.h
 	$(GPP) room.cpp -c
 
 messages: messages.cpp messages.h 
@@ -28,7 +25,7 @@ messages: messages.cpp messages.h
 server: server.h messages
 	$(GPP) server.cpp -c $(IPATH)
 
-main: tcpsocket room user server
+main: tcpsocket room server
 	$(GPP) main.cpp *.o deps/json11/json11.o $(IPATH) $(LDFLAGS) -o main
 
 clean:

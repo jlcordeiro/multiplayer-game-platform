@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include "tcpsocket.h"
 
 int TCPSocket::recv_connection()
@@ -20,22 +21,6 @@ int TCPSocket::recv_connection()
     }
 
     return newfd;
-}
-
-void TCPSocket::broadcast(const char* buf, size_t nbytes) const
-{
-    for(int j = 0; j <= _fdmax; j++) {
-        if (FD_ISSET(j, &_fds) && j != _listener) {
-            if (send(j, buf, nbytes, 0) == -1) {
-                handle_send_error(j, buf, nbytes);
-            }
-        }
-    }
-}
-
-void TCPSocket::broadcast(const std::string& msg) const
-{
-    broadcast(msg.c_str(), msg.length());
 }
 
 void TCPSocket::recv_data(int socket)
@@ -94,4 +79,9 @@ int TCPSocket::go()
     }
 
     return 0;
+}
+
+int send(int fd, const string& msg)
+{
+    return send(fd, msg.c_str(), msg.length(), 0);
 }

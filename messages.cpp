@@ -3,14 +3,23 @@
 static const Json::shape set_name_shape = {std::make_pair("setName", json11::Json::STRING)};
 static const Json::shape join_shape = {std::make_pair("join", json11::Json::STRING)};
 
-bool isSetName(const std::string& msg, std::string& err)
+static bool has_shape(const std::string& msg, Json::shape shape, std::string& err)
 {
     auto json = Json::parse(msg, err);
-    return ((json != nullptr) && json.has_shape(set_name_shape, err));
+    return ((json != nullptr) && json.has_shape(shape, err));
+}
+
+bool isSetName(const std::string& msg, std::string& err)
+{
+    return has_shape(msg, set_name_shape, err);
 }
 
 bool isJoin(const std::string& msg, std::string& err)
 {
-    auto json = Json::parse(msg, err);
-    return ((json != nullptr) && json.has_shape(join_shape, err));
+    return has_shape(msg, join_shape, err);
+}
+
+Json getUserJoin(const User& u)
+{
+    return Json(Json::object({{"UserJoin", u.getName()}}));
 }
