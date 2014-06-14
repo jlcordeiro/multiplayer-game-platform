@@ -2,5 +2,7 @@
 {"setName":"ines"}
 {"setName":"room1"}
 
+{"maxUsers":3}
+
 {"join":"room1"}
 {"quit":"room1"}

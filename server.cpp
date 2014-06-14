@@ -37,8 +37,10 @@ Server::Server(const char* rport, const char* uport)
             cout << "<<< [U] " << u.second->getName() << endl;
         }
 
-        for (auto r : _rooms) {
-            cout << "<<< [R] " << r.second->getName() << " <" << r.second->getUserCount() << ">" << endl;
+        for (auto rp : _rooms) {
+            shared_ptr<Room> r = rp.second;
+            cout << "<<< [R] " << r->getName()
+                 << " <" << r->getUserCount() << "/" << r->getMaxUsers() << ">" << endl;
         }
 
         usleep(1000000);
@@ -56,8 +58,13 @@ void Server::handle_room_data(int fd, const string& data)
 
     if (isSetName(data, err)) {
         room->setName(json["setName"].string_value());
+        return;
     }
 
+    if (isMaxUsers(data, err)) {
+        room->setMaxUsers(json["maxUsers"].int_value());
+        return;
+    }
 }
 
 void Server::handle_user_data(int fd, const string& data)
@@ -76,7 +83,8 @@ void Server::handle_user_data(int fd, const string& data)
 
     if (isJoin(data, err)) {
         auto room = findByName<Room>(_rooms, json["join"].string_value());
-        if (room && !room->containsUser(user)) {
+        if (room && !room->containsUser(user)
+                 && room->getUserCount() < room->getMaxUsers()) {
             room->addUser(user);
         }
         return;

@@ -3,6 +3,7 @@
 static const Json::shape set_name_shape = {std::make_pair("setName", json11::Json::STRING)};
 static const Json::shape join_shape = {std::make_pair("join", json11::Json::STRING)};
 static const Json::shape quit_shape = {std::make_pair("quit", json11::Json::STRING)};
+static const Json::shape maxusers_shape = {std::make_pair("maxUsers", json11::Json::NUMBER)};
 
 static bool has_shape(const std::string& msg, Json::shape shape, std::string& err)
 {
@@ -23,6 +24,11 @@ bool isJoin(const std::string& msg, std::string& err)
 bool isQuit(const std::string& msg, std::string& err)
 {
     return has_shape(msg, quit_shape, err);
+}
+
+bool isMaxUsers(const std::string& msg, std::string& err)
+{
+    return has_shape(msg, maxusers_shape, err);
 }
 
 Json getUserJoin(const User& u)
