@@ -1,5 +1,6 @@
 #include "room.h"
 #include <limits>
+#include "messages.h"
 
 Room::Room(long int fd)
     : Entity(fd),
@@ -25,11 +26,17 @@ void Room::setMaxUsers(long int value)
 
 void Room::addUser(shared_ptr<User> user)
 {
-    if (!containsUser(user)) {
-        _user_count++;
+    if (containsUser(user)) {
+        return;
     }
 
     _users[user->getId()] = user;
+    _user_count++;
+
+    auto json = getUserJoin(*user);
+    for (auto u : _users) {
+        u.second->send(json.dump());
+    }
 }
 
 bool Room::containsUser(shared_ptr<User> user) const
@@ -39,7 +46,17 @@ bool Room::containsUser(shared_ptr<User> user) const
 
 void Room::removeUser(shared_ptr<User> user)
 {
+    if (!containsUser(user)) {
+        return;
+    }
+
+    auto json = getUserQuit(*user);
+    for (auto u : _users) {
+        u.second->send(json.dump());
+    }
+
     _users.erase(user->getId());
+    _user_count--;
 }
 
 shared_ptr<User> Room::getUserById(long int id)

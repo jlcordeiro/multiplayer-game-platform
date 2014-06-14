@@ -1,19 +1,33 @@
 #include "server.h"
 #include "messages.h"
 using namespace std;
+using namespace std::placeholders;
 
 Server::Server(const char* rport, const char* uport)
-:   _rooms_socket(rport, _rooms),
-    _users_socket(uport, _users)
+:   _rooms_socket(rport),
+    _users_socket(uport)
 {
-    auto f_users = bind(&Server::process_user_data, this, placeholders::_1, placeholders::_2);
-    auto f_rooms = bind(&Server::process_room_data, this, placeholders::_1, placeholders::_2);
+    auto h_users_data = sp_data_fn_t(
+            new data_fn_t(bind(&Server::handle_user_data, this, _1, _2)));
+    auto h_rooms_data = sp_data_fn_t(
+            new data_fn_t(bind(&Server::handle_room_data, this, _1, _2)));
 
-    auto sp_f_users = shared_ptr<user_data_fn_t>(new user_data_fn_t(f_users));
-    auto sp_f_rooms = shared_ptr<room_data_fn_t>(new room_data_fn_t(f_rooms));
+    auto h_users_connect = sp_conn_fn_t(
+            new conn_fn_t(bind(&Server::handle_user_connect, this, _1)));
+    auto h_rooms_connect = sp_conn_fn_t(
+            new conn_fn_t(bind(&Server::handle_room_connect, this, _1)));
 
-    _users_socket.set_process_data_fn(sp_f_users);
-    _rooms_socket.set_process_data_fn(sp_f_rooms);
+    auto h_users_disconnect = sp_conn_fn_t(
+            new conn_fn_t(bind(&Server::handle_user_disconnect, this, _1)));
+    auto h_rooms_disconnect = sp_conn_fn_t(
+            new conn_fn_t(bind(&Server::handle_room_disconnect, this, _1)));
+
+    _users_socket.set_data_fn(h_users_data);
+    _rooms_socket.set_data_fn(h_rooms_data);
+    _users_socket.set_connect_fn(h_users_connect);
+    _rooms_socket.set_connect_fn(h_rooms_connect);
+    _users_socket.set_disconnect_fn(h_users_disconnect);
+    _rooms_socket.set_disconnect_fn(h_rooms_disconnect);
 
     for(;;) {
         _users_socket.go();
@@ -31,9 +45,11 @@ Server::Server(const char* rport, const char* uport)
     }
 }
 
-void Server::process_room_data(shared_ptr<Room> room, const string& data)
+void Server::handle_room_data(int fd, const string& data)
 {
-    cout << "<< " << data  << endl;
+    auto room = _rooms[fd];
+
+    cout << "[" << fd << "/" << room->getName() << "] >> " << data << endl;
 
     std::string err;
     auto json = Json::parse(data, err);
@@ -44,9 +60,11 @@ void Server::process_room_data(shared_ptr<Room> room, const string& data)
 
 }
 
-void Server::process_user_data(shared_ptr<User> user, const string& data)
+void Server::handle_user_data(int fd, const string& data)
 {
-    cout << "<< " << data  << endl;
+    auto user = _users[fd];
+
+    cout << "[" << fd << "/" << user->getName() << "] >> " << data << endl;
 
     std::string err;
     auto json = Json::parse(data, err);
@@ -59,13 +77,49 @@ void Server::process_user_data(shared_ptr<User> user, const string& data)
     if (isJoin(data, err)) {
         auto room = findByName<Room>(_rooms, json["join"].string_value());
         if (room && !room->containsUser(user)) {
-            auto json = getUserJoin(*user);
-
             room->addUser(user);
-            for (auto u : room->getUsers())
-            {
-                u.second->send(json.dump());
-            }
         }
+        return;
     }
+
+    if (isQuit(data, err)) {
+        auto room = findByName<Room>(_rooms, json["quit"].string_value());
+        if (room && room->containsUser(user)) {
+            room->removeUser(user);
+        }
+        return;
+    }
+}
+
+void Server::handle_room_connect(int fd)
+{
+    cout << "Adding room [" << fd << "]." << endl;
+    _rooms[fd] = shared_ptr<Room>(new Room(fd));
+}
+
+void Server::handle_room_disconnect(int fd)
+{
+    cout << "Removing room [" << fd << "]." << endl;
+    _rooms.erase(fd);
+}
+
+void Server::handle_user_connect(int fd)
+{
+    cout << "Adding user [" << fd << "]." << endl;
+    _users[fd] = shared_ptr<User>(new User(fd));
+}
+
+void Server::handle_user_disconnect(int fd)
+{
+    cout << "Removing user [" << fd << "]." << endl;
+
+    // remove from rooms
+    auto user = _users[fd];
+
+    for (auto r : _rooms) {
+        r.second->removeUser(user);
+    }
+
+    // delete user
+    _users.erase(fd);
 }

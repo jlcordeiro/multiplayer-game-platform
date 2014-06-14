@@ -3,3 +3,4 @@
 {"setName":"room1"}
 
 {"join":"room1"}
+{"quit":"room1"}

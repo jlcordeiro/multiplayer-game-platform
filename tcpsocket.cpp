@@ -17,7 +17,9 @@ int TCPSocket::recv_connection()
             _fdmax = newfd;
         }
 
-        handle_connect(newfd);
+        if (auto pfn = _connect_fn.lock()) {
+            (*pfn)(newfd);
+        }
     }
 
     return newfd;
@@ -28,12 +30,18 @@ void TCPSocket::recv_data(int socket)
     char buf[BUF_SIZE];
     size_t nbytes;
     if ((nbytes = recv(socket, buf, sizeof buf, 0)) <= 0) {
-        handle_disconnect(socket);
+        if (auto pfn = _disconnect_fn.lock()) {
+            (*pfn)(socket);
+        }
+
         close(socket);
         FD_CLR(socket, &_fds); // remove from master set
     } else {
         buf[nbytes-2] = '\0'; // remove \r\n
-        handle_data(socket, buf, nbytes);
+
+        if (auto pfn = _data_fn.lock()) {
+            (*pfn)(socket, string(buf));
+        }
     }
 }
 
@@ -60,7 +68,7 @@ int TCPSocket::go()
     int select_res = select(_fdmax+1, &read_fds, NULL, NULL, &timeout);
     if (select_res < 1) {
         if (select_res == -1) {
-            handle_select_error();
+//             handle_select_error();
         }
         return select_res;
     }
@@ -80,6 +88,23 @@ int TCPSocket::go()
 
     return 0;
 }
+
+void TCPSocket::set_data_fn(shared_ptr<data_fn_t> f)
+{
+    _data_fn = f;
+}
+
+void TCPSocket::set_connect_fn(shared_ptr<conn_fn_t> f)
+{
+    _connect_fn = f;
+}
+
+void TCPSocket::set_disconnect_fn(shared_ptr<conn_fn_t> f)
+{
+    _disconnect_fn = f;
+}
+
+// ----
 
 int send(int fd, const string& msg)
 {

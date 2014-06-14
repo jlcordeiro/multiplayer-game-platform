@@ -7,6 +7,11 @@
 #include "psocket.h"
 using namespace std;
 
+typedef function<void(int)> conn_fn_t;
+typedef shared_ptr<function<void(int)>> sp_conn_fn_t;
+typedef function<void(int, const string&)> data_fn_t;
+typedef shared_ptr<function<void(int, const string&)>> sp_data_fn_t;
+
 class TCPSocket {
     private:
         TCPSocket();
@@ -31,11 +36,20 @@ class TCPSocket {
          */
         void recv_data(int socket);
 
-    protected:
-        virtual void handle_connect(int fd) = 0;
-        virtual void handle_disconnect(int fd) = 0;
-        virtual void handle_data(int fd, const char* what, size_t nbytes) = 0;
-        virtual void handle_select_error() = 0;
+        /**
+         * \brief Function that will be called when new data is available.
+         */
+        weak_ptr<data_fn_t> _data_fn;
+
+        /**
+         * \brief Function that will be called when a new connection is received.
+         */
+        weak_ptr<conn_fn_t> _connect_fn;
+
+        /**
+         * \brief Function that will be called when someone disconnects.
+         */
+        weak_ptr<conn_fn_t> _disconnect_fn;
 
     public:
         enum {BUF_SIZE = 1024};
@@ -46,6 +60,21 @@ class TCPSocket {
          * \brief Check all the file descriptors and act accordingly.
          */
         int go();
+
+        /**
+         * \brief Set the function to be called on new data.
+         */
+        void set_data_fn(shared_ptr<data_fn_t> f);
+
+        /**
+         * \brief Set the function to be called on new connection.
+         */
+        void set_connect_fn(shared_ptr<conn_fn_t> f);
+
+        /*
+         * \brief Set the function to be called on disconnection.
+         */
+        void set_disconnect_fn(shared_ptr<conn_fn_t> f);
 };
 
 int send(int fd, const string& msg);

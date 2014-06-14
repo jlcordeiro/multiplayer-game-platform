@@ -17,7 +17,7 @@ tcpsocket: psocket tcpsocket.cpp tcpsocket.h messages
 	$(GPP) tcpsocket.cpp -c $(IPATH)
 
 room: room.cpp room.h user.h entity.h
-	$(GPP) room.cpp -c
+	$(GPP) room.cpp -c $(IPATH)
 
 messages: messages.cpp messages.h 
 	$(GPP) messages.cpp -c $(IPATH)

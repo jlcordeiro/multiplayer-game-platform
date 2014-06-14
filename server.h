@@ -24,14 +24,18 @@ shared_ptr<T> findByName(map<int,shared_ptr<T> > group, string name)
 class Server
 {
 private:
-    RoomSocket _rooms_socket;
-    UserSocket _users_socket;
+    TCPSocket _rooms_socket;
+    TCPSocket _users_socket;
 
     map<int,shared_ptr<Room> > _rooms;
     map<int,shared_ptr<User> > _users;
 
-    void process_user_data(shared_ptr<User> user, const string& data);
-    void process_room_data(shared_ptr<Room> user, const string& data);
+    void handle_user_data(int fd, const string& data);
+    void handle_room_data(int fd, const string& data);
+    void handle_user_connect(int fd);
+    void handle_room_connect(int fd);
+    void handle_user_disconnect(int fd);
+    void handle_room_disconnect(int fd);
 
 public:
     Server(const char* rport, const char* uport);
