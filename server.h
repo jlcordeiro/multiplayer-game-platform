@@ -24,8 +24,8 @@ shared_ptr<T> findByName(map<int,shared_ptr<T> > group, string name)
 class Server
 {
 private:
-    TCPSocket _rooms_socket;
-    TCPSocket _users_socket;
+    TCPServer _rooms_socket;
+    TCPServer _users_socket;
 
     map<int,shared_ptr<Room> > _rooms;
     map<int,shared_ptr<User> > _users;

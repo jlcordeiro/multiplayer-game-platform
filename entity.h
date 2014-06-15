@@ -14,9 +14,8 @@ class Entity
     static unsigned long _id_current;
 
 public:
-    Entity(long int fd)
+    Entity()
         : _id(_id_current++),
-        _fd(fd),
         _name("")
     {
     }
@@ -34,11 +33,6 @@ public:
     void setName(string value)
     {
         _name = value;
-    }
-
-    int send(const string& msg) const
-    {
-        return ::send(_fd, msg);
     }
 
     Variable getVariable(string name) const
@@ -76,7 +70,6 @@ public:
 
 protected:
     unsigned long _id;
-    long _fd;
     string _name;
     map<string,Variable> _variables;
 };

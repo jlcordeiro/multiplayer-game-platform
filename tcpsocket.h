@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <unistd.h>
 #include <iostream>
 #include "psocket.h"
 using namespace std;
@@ -12,9 +13,11 @@ typedef shared_ptr<function<void(int)>> sp_conn_fn_t;
 typedef function<void(int, const string&)> data_fn_t;
 typedef shared_ptr<function<void(int, const string&)>> sp_data_fn_t;
 
-class TCPSocket {
+enum {BUF_SIZE = 2048};
+
+class TCPServer {
     private:
-        TCPSocket();
+        TCPServer();
 
         /** \brief Listening socket descriptor. */
         int                 _listener;
@@ -52,9 +55,7 @@ class TCPSocket {
         weak_ptr<conn_fn_t> _disconnect_fn;
 
     public:
-        enum {BUF_SIZE = 1024};
-
-        TCPSocket(const char* port);
+        TCPServer(const char* port);
 
         /**
          * \brief Check all the file descriptors and act accordingly.
@@ -78,5 +79,39 @@ class TCPSocket {
 };
 
 int send(int fd, const string& msg);
+
+class TCPClient {
+private:
+    int _fd;
+    bool _running;
+
+public:
+    TCPClient(const char* host, int port)
+        : _fd(connect_to_socket(host, port)),
+          _running(_fd >= 0)
+    {
+    }
+
+    ~TCPClient()
+    {
+        close(_fd);
+    }
+
+    int send(const string& msg) {
+        return ::send(_fd, msg);
+    }
+
+    size_t recv(char* buffer)
+    {
+        bzero(buffer, BUF_SIZE);
+
+        auto n = read(_fd, buffer, BUF_SIZE);
+        if (n < 0) {
+            return n;
+        }
+
+        return n;
+    }
+};
 
 #endif

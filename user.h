@@ -6,8 +6,8 @@
 class User : public Entity
 {
 public:
-    User(long int fd)
-        : Entity(fd)
+    User()
+        : Entity()
     {
     }
 };

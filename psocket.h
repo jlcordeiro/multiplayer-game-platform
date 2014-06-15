@@ -17,6 +17,9 @@ void *get_in_addr(struct sockaddr *sa);
 /** Create a new socket. */
 int create_socket(const char* port);
 
+/** Connect to an existing socket. */
+int connect_to_socket(const char* host, int port);
+
 #ifdef __cplusplus
 }
 #endif

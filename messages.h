@@ -14,5 +14,6 @@ bool isVariable(const std::string& msg, std::string& err);
 
 Json getUserJoin(const User& u);
 Json getUserQuit(const User& u);
+Json setMaxUsers(int limit);
 
 #endif

@@ -122,7 +122,7 @@ void Server::handle_user_data(int fd, const string& data)
 void Server::handle_room_connect(int fd)
 {
     cout << "Adding room [" << fd << "]." << endl;
-    _rooms[fd] = shared_ptr<Room>(new Room(fd));
+    _rooms[fd] = shared_ptr<Room>(new Room());
 }
 
 void Server::handle_room_disconnect(int fd)
@@ -134,7 +134,7 @@ void Server::handle_room_disconnect(int fd)
 void Server::handle_user_connect(int fd)
 {
     cout << "Adding user [" << fd << "]." << endl;
-    _users[fd] = shared_ptr<User>(new User(fd));
+    _users[fd] = shared_ptr<User>(new User());
 }
 
 void Server::handle_user_disconnect(int fd)

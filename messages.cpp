@@ -1,5 +1,6 @@
 #include "messages.h"
 
+static 
 static const Json::shape set_name_shape = {std::make_pair("setName", json11::Json::STRING)};
 static const Json::shape join_shape = {std::make_pair("join", json11::Json::STRING)};
 static const Json::shape quit_shape = {std::make_pair("quit", json11::Json::STRING)};
@@ -44,4 +45,9 @@ Json getUserJoin(const User& u)
 Json getUserQuit(const User& u)
 {
     return Json(Json::object({{"UserQuit", u.getName()}}));
+}
+
+Json setMaxUsers(int limit)
+{
+    return Json(Json::object({{"maxUsers", (int)limit}}));
 }

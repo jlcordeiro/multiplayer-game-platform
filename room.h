@@ -2,29 +2,49 @@
 #define __ROOM_H__
 
 #include "user.h"
+#include "config.h"
 #include "entity.h"
+#include "messages.h"
 #include <memory>
 using namespace std;
 
 class Room : public Entity
 {
     public:
-        Room(long int fd);
+        Room();
 
         long int getUserCount() const;
         long int getMaxUsers() const;
-        void setMaxUsers(long int value);
+        virtual void setMaxUsers(long int value);
 
         void addUser(shared_ptr<User> user);
         bool containsUser(shared_ptr<User> user) const;
         void removeUser(shared_ptr<User> user);
         shared_ptr<User> getUserById(long int id);
-        const map<long int, shared_ptr<User> >& getUsers() const;
+        const map<int, shared_ptr<User> >& getUsers() const;
 
     protected:
-        map<long int,shared_ptr<User> > _users;
+        map<int,shared_ptr<User> > _users;
         long unsigned int _max_users;
         long unsigned int _user_count;
+};
+
+class GameRoom : public Room
+{
+public:
+    GameRoom()
+        : Room(),
+          _socket("localhost", atoi(Config::ROOM_PORT))
+    {
+    }
+
+    void setMaxUsers(long int value) override
+    {
+        Room::setMaxUsers(value);
+        _socket.send(::setMaxUsers(value).dump());
+    }
+private:
+    TCPClient _socket;
 };
 
 #endif

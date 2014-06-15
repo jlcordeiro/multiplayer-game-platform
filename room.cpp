@@ -2,8 +2,8 @@
 #include <limits>
 #include "messages.h"
 
-Room::Room(long int fd)
-    : Entity(fd),
+Room::Room()
+    : Entity(),
     _max_users(std::numeric_limits<long int>::max()),
     _user_count(0)
 {
@@ -35,7 +35,7 @@ void Room::addUser(shared_ptr<User> user)
 
     auto json = getUserJoin(*user);
     for (auto u : _users) {
-        u.second->send(json.dump());
+        send(u.first, json.dump());
     }
 }
 
@@ -52,7 +52,7 @@ void Room::removeUser(shared_ptr<User> user)
 
     auto json = getUserQuit(*user);
     for (auto u : _users) {
-        u.second->send(json.dump());
+        send(u.first, json.dump());
     }
 
     _users.erase(user->getId());
@@ -70,7 +70,7 @@ shared_ptr<User> Room::getUserById(long int id)
     return it->second;
 }
 
-const map<long int, shared_ptr<User> >& Room::getUsers() const
+const map<int, shared_ptr<User> >& Room::getUsers() const
 {
     return _users;
 }

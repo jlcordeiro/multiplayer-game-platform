@@ -5,7 +5,7 @@ IPATH := -I./deps/
 
 .PHONY: deps
 
-all: deps main
+all: deps main game
 
 deps:
 	make -C ./deps/
@@ -16,7 +16,10 @@ psocket: psocket.c psocket.h
 tcpsocket: psocket tcpsocket.cpp tcpsocket.h messages
 	$(GPP) tcpsocket.cpp -c $(IPATH)
 
-room: room.cpp room.h user.h entity.h
+entity: entity.cpp entity.h
+	$(GPP) entity.cpp -c $(IPATH)
+
+room: entity room.cpp room.h user.h
 	$(GPP) room.cpp -c $(IPATH)
 
 messages: messages.cpp messages.h 
@@ -27,6 +30,9 @@ server: server.h messages
 
 main: tcpsocket room server
 	$(GPP) main.cpp *.o deps/json11/json11.o $(IPATH) $(LDFLAGS) -o main
+
+game: tcpsocket room server
+	$(GPP) gameserver.cpp *.o deps/json11/json11.o $(IPATH) $(LDFLAGS) -o game
 
 clean:
 	rm tcpsocket.o main

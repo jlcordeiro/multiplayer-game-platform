@@ -1,18 +1,9 @@
 #include <unistd.h>
 #include "server.h"
-
-unsigned long Entity::_id_current = 0;
+#include "config.h"
 
 int main(int argc, const char *argv[])
 {
-    if (argc != 3) {
-        return 1;
-    }
-
-    const char* RPORT = argv[1];
-    const char* UPORT = argv[2];
-
-    Server server(RPORT, UPORT);
-
+    Server server(Config::ROOM_PORT, Config::USER_PORT);
     return 0;
 }

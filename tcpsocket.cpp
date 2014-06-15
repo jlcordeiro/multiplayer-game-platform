@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include "tcpsocket.h"
 
-int TCPSocket::recv_connection()
+int TCPServer::recv_connection()
 {
     struct sockaddr_storage remoteaddr; // client address
     socklen_t addrlen = sizeof remoteaddr;
@@ -25,7 +25,7 @@ int TCPSocket::recv_connection()
     return newfd;
 }
 
-void TCPSocket::recv_data(int socket)
+void TCPServer::recv_data(int socket)
 {
     char buf[BUF_SIZE];
     size_t nbytes;
@@ -45,7 +45,7 @@ void TCPSocket::recv_data(int socket)
     }
 }
 
-TCPSocket::TCPSocket(const char* port)
+TCPServer::TCPServer(const char* port)
     :   _listener(create_socket(port)),
         _fdmax(_listener),
         _running(_listener != -1)
@@ -55,7 +55,7 @@ TCPSocket::TCPSocket(const char* port)
     FD_SET(_listener, &_fds);
 }
 
-int TCPSocket::go()
+int TCPServer::go()
 {
     fd_set read_fds; // temp file descriptor list for select()
     FD_ZERO(&read_fds);
@@ -89,17 +89,17 @@ int TCPSocket::go()
     return 0;
 }
 
-void TCPSocket::set_data_fn(shared_ptr<data_fn_t> f)
+void TCPServer::set_data_fn(shared_ptr<data_fn_t> f)
 {
     _data_fn = f;
 }
 
-void TCPSocket::set_connect_fn(shared_ptr<conn_fn_t> f)
+void TCPServer::set_connect_fn(shared_ptr<conn_fn_t> f)
 {
     _connect_fn = f;
 }
 
-void TCPSocket::set_disconnect_fn(shared_ptr<conn_fn_t> f)
+void TCPServer::set_disconnect_fn(shared_ptr<conn_fn_t> f)
 {
     _disconnect_fn = f;
 }
@@ -108,5 +108,5 @@ void TCPSocket::set_disconnect_fn(shared_ptr<conn_fn_t> f)
 
 int send(int fd, const string& msg)
 {
-    return send(fd, msg.c_str(), msg.length(), 0);
+    return send(fd, string(msg+"\r\n").c_str(), msg.length()+2, 0);
 }
