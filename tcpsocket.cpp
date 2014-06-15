@@ -1,3 +1,4 @@
+#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,6 +26,24 @@ int TCPServer::recv_connection()
     return newfd;
 }
 
+static vector<string> split_string(const string& str)
+{
+    vector<string> strings;
+
+    string::size_type pos = 0;
+    string::size_type prev = 0;
+    while ((pos = str.find("\n", prev)) != string::npos)
+    {
+        strings.push_back(str.substr(prev, pos - prev));
+        prev = pos + 1;
+    }
+
+    // To get the last substring (or only, if delimiter is not found)
+    strings.push_back(str.substr(prev));
+
+    return strings;
+}
+
 void TCPServer::recv_data(int socket)
 {
     char buf[BUF_SIZE];
@@ -39,8 +58,11 @@ void TCPServer::recv_data(int socket)
     } else {
         buf[nbytes-2] = '\0'; // remove \r\n
 
-        if (auto pfn = _data_fn.lock()) {
-            (*pfn)(socket, string(buf));
+        auto tokens = split_string(string(buf));
+        for (auto sbuf : tokens) {
+            if (auto pfn = _data_fn.lock()) {
+                (*pfn)(socket, sbuf);
+            }
         }
     }
 }
