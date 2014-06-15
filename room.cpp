@@ -33,9 +33,9 @@ void Room::addUser(shared_ptr<User> user)
     _users[user->getId()] = user;
     _user_count++;
 
-    auto json = getUserJoin(*user);
+    auto str = protocol::Join::str(*user);
     for (auto u : _users) {
-        send(u.first, json.dump());
+        send(u.first, str);
     }
 }
 
@@ -50,9 +50,9 @@ void Room::removeUser(shared_ptr<User> user)
         return;
     }
 
-    auto json = getUserQuit(*user);
+    auto str = protocol::Quit::str(*user);
     for (auto u : _users) {
-        send(u.first, json.dump());
+        send(u.first, str);
     }
 
     _users.erase(user->getId());

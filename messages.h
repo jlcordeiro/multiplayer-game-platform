@@ -6,14 +6,95 @@
 #include <json11/json11.hpp>
 using json11::Json;
 
-bool isSetName(const std::string& msg, std::string& err);
-bool isJoin(const std::string& msg, std::string& err);
-bool isQuit(const std::string& msg, std::string& err);
-bool isMaxUsers(const std::string& msg, std::string& err);
 bool isVariable(const std::string& msg, std::string& err);
 
-Json getUserJoin(const User& u);
-Json getUserQuit(const User& u);
-Json setMaxUsers(int limit);
+namespace protocol
+{
 
+static inline bool has_shape(const string& msg, Json::shape shape)
+{
+    string err;
+    auto json = Json::parse(msg, err);
+    return ((json != nullptr) && json.has_shape(shape, err));
+}
+
+class Name
+{
+public:
+    static const string tag;
+    static const Json::shape shape;
+
+    static bool validate(const string& msg)
+    {
+        return has_shape(msg, shape);
+    }
+
+    static string str(const Entity& e)
+    {
+        return Json(Json::object({{tag, e.getName()}})).dump();
+    }
+
+};
+
+class Join
+{
+public:
+    static const string tag;
+    static const Json::shape shape;
+
+    static bool validate(const string& msg)
+    {
+        return has_shape(msg, shape);
+    }
+
+    static string str(const User& u)
+    {
+        return Json(Json::object({{tag, u.getName()}})).dump();
+    }
+};
+
+class Quit
+{
+public:
+    static const string tag;
+    static const Json::shape shape;
+    
+    static bool validate(const string& msg)
+    {
+        return has_shape(msg, shape);
+    }
+
+    static string str(const User& u)
+    {
+        return Json(Json::object({{tag, u.getName()}})).dump();
+    }
+};
+
+class MaxUsers
+{
+public:
+    static const string tag;
+    static const Json::shape shape;
+    
+    static bool validate(const string& msg)
+    {
+        return has_shape(msg, shape);
+    }
+
+    static string str(int limit)
+    {
+        return Json(Json::object({{tag, limit}})).dump();
+    }
+};
+
+class Variable
+{
+public:
+    static bool validate(const string& msg)
+    {
+        return msg[0] == '#';
+    }
+};
+
+}
 #endif

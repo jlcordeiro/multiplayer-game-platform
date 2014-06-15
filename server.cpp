@@ -57,7 +57,7 @@ static void processVariables(shared_ptr<Entity> entity, Json json)
 {
     string err;
     for (auto & i : json.object_items()) {
-        if (isVariable(i.first, err)) {
+        if (protocol::Variable::validate(i.first)) {
             entity->setVariable(i.first.substr(1), i.second);
         }
     }
@@ -72,12 +72,12 @@ void Server::handle_room_data(int fd, const string& data)
     std::string err;
     auto json = Json::parse(data, err);
 
-    if (isSetName(data, err)) {
+    if (protocol::Name::validate(data)) {
         room->setName(json["setName"].string_value());
         return;
     }
 
-    if (isMaxUsers(data, err)) {
+    if (protocol::MaxUsers::validate(data)) {
         room->setMaxUsers(json["maxUsers"].int_value());
         return;
     }
@@ -94,12 +94,12 @@ void Server::handle_user_data(int fd, const string& data)
     std::string err;
     auto json = Json::parse(data, err);
 
-    if (isSetName(data, err)) {
+    if (protocol::Name::validate(data)) {
         user->setName(json["setName"].string_value());
         return;
     }
 
-    if (isJoin(data, err)) {
+    if (protocol::Join::validate(data)) {
         auto room = findByName<Room>(_rooms, json["join"].string_value());
         if (room && !room->containsUser(user)
                  && room->getUserCount() < room->getMaxUsers()) {
@@ -108,7 +108,7 @@ void Server::handle_user_data(int fd, const string& data)
         return;
     }
 
-    if (isQuit(data, err)) {
+    if (protocol::Quit::validate(data)) {
         auto room = findByName<Room>(_rooms, json["quit"].string_value());
         if (room && room->containsUser(user)) {
             room->removeUser(user);

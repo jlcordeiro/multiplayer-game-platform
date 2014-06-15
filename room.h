@@ -41,7 +41,7 @@ public:
     void setMaxUsers(long int value) override
     {
         Room::setMaxUsers(value);
-        _socket.send(::setMaxUsers(value).dump());
+        _socket.send(protocol::MaxUsers::str(value));
     }
 private:
     TCPClient _socket;

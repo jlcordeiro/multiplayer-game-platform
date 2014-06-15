@@ -1,53 +1,19 @@
 #include "messages.h"
 
-static 
-static const Json::shape set_name_shape = {std::make_pair("setName", json11::Json::STRING)};
-static const Json::shape join_shape = {std::make_pair("join", json11::Json::STRING)};
-static const Json::shape quit_shape = {std::make_pair("quit", json11::Json::STRING)};
-static const Json::shape maxusers_shape = {std::make_pair("maxUsers", json11::Json::NUMBER)};
-
-static bool has_shape(const std::string& msg, Json::shape shape, std::string& err)
+namespace protocol
 {
-    auto json = Json::parse(msg, err);
-    return ((json != nullptr) && json.has_shape(shape, err));
-}
 
-bool isSetName(const std::string& msg, std::string& err)
-{
-    return has_shape(msg, set_name_shape, err);
-}
+using namespace std;
+using namespace json11;
 
-bool isJoin(const std::string& msg, std::string& err)
-{
-    return has_shape(msg, join_shape, err);
-}
+const string Name::tag = "name";
+const string Join::tag = "join";
+const string Quit::tag = "quit";
+const string MaxUsers::tag = "maxUsers";
 
-bool isQuit(const std::string& msg, std::string& err)
-{
-    return has_shape(msg, quit_shape, err);
-}
+const Json::shape Name::shape = {make_pair(Name::tag, Json::STRING)};
+const Json::shape Join::shape = {make_pair(Join::tag, Json::STRING)};
+const Json::shape Quit::shape = {make_pair(Quit::tag, Json::STRING)};
+const Json::shape MaxUsers::shape = {make_pair(MaxUsers::tag, Json::NUMBER)};
 
-bool isMaxUsers(const std::string& msg, std::string& err)
-{
-    return has_shape(msg, maxusers_shape, err);
-}
-
-bool isVariable(const std::string& msg, std::string& err)
-{
-    return msg[0] == '#';
-}
-
-Json getUserJoin(const User& u)
-{
-    return Json(Json::object({{"UserJoin", u.getName()}}));
-}
-
-Json getUserQuit(const User& u)
-{
-    return Json(Json::object({{"UserQuit", u.getName()}}));
-}
-
-Json setMaxUsers(int limit)
-{
-    return Json(Json::object({{"maxUsers", (int)limit}}));
 }
