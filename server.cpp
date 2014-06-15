@@ -73,7 +73,7 @@ void Server::handle_room_data(int fd, const string& data)
     auto json = Json::parse(data, err);
 
     if (protocol::Name::validate(data)) {
-        room->setName(json["setName"].string_value());
+        room->setName(json[protocol::Name::tag].string_value());
         return;
     }
 

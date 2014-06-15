@@ -30,7 +30,7 @@ public:
         return _name;
     }
 
-    void setName(string value)
+    virtual void setName(string value)
     {
         _name = value;
     }

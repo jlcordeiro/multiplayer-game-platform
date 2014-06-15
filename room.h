@@ -43,6 +43,12 @@ public:
         Room::setMaxUsers(value);
         _socket.send(protocol::MaxUsers::str(value));
     }
+
+    void setName(string value) override
+    {
+        Room::setName(value);
+        _socket.send(protocol::Name::str(value));
+    }
 private:
     TCPClient _socket;
 };

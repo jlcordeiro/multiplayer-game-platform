@@ -29,9 +29,9 @@ public:
         return has_shape(msg, shape);
     }
 
-    static string str(const Entity& e)
+    static string str(const string& s)
     {
-        return Json(Json::object({{tag, e.getName()}})).dump();
+        return Json(Json::object({{tag, s}})).dump();
     }
 
 };
