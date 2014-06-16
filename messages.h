@@ -1,7 +1,7 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-#include "user.h"
+#include "entity.h"
 #include <string>
 #include <json11/json11.hpp>
 using json11::Json;
@@ -47,7 +47,7 @@ public:
         return has_shape(msg, shape);
     }
 
-    static string str(const User& u)
+    static string str(const Entity& u)
     {
         return Json(Json::object({{tag, u.getName()}})).dump();
     }
@@ -64,7 +64,7 @@ public:
         return has_shape(msg, shape);
     }
 
-    static string str(const User& u)
+    static string str(const Entity& u)
     {
         return Json(Json::object({{tag, u.getName()}})).dump();
     }
