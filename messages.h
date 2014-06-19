@@ -40,17 +40,32 @@ class Join
 {
 public:
     static const string tag;
-    static const Json::shape shape;
+    static const Json::shape request_shape;
+    static const Json::shape reply_shape;
 
-    static bool validate(const string& msg)
+    static bool validate_request(const string& msg)
     {
-        return has_shape(msg, shape);
+        return has_shape(msg, request_shape);
     }
 
-    static string str(const Entity& u)
+    static bool validate_reply(const string& msg)
     {
-        return Json(Json::object({{tag, u.getName()}})).dump();
+        return has_shape(msg, reply_shape);
     }
+
+    static string request(const string& room_name)
+    {
+        return Json(Json::object({{tag, room_name}})).dump();
+    }
+
+    static string reply(const string& room_name, const string& user_name)
+    {
+        return Json(Json::object({{tag,
+                                   Json::object{{"user", user_name},
+                                                {"room", room_name}}
+                                  }})).dump();
+    }
+
 };
 
 class Quit

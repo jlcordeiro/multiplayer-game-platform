@@ -36,6 +36,31 @@ public:
         : Room(),
           _socket("localhost", atoi(Config::ROOM_PORT))
     {
+        setName("Room1");
+        setMaxUsers(4);
+
+        while (1) {
+            char buffer[BUF_SIZE] = "";
+
+            size_t nbytes = _socket.recv(buffer);
+            if (nbytes > 0) {
+                std::string err;
+                cout << "<< " << buffer << endl;
+ 
+                auto json = Json::parse(string(buffer), err);
+                if (protocol::Join::validate_reply(buffer)) {
+                    string user_name = json[protocol::Join::tag]["user"].string_value();
+                    cout << user_name << " joined!" << endl;
+
+                    shared_ptr<User> user = shared_ptr<User>(new User());
+                    user->setName(user_name);
+                    addUser(user);
+                }
+            }
+
+            cout << "@@ " << getUserCount() << endl;
+            sleep(1);
+        }
     }
 
     void setMaxUsers(long int value) override

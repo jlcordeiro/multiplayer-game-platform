@@ -95,14 +95,26 @@ void Server::handle_user_data(int fd, const string& data)
     auto json = Json::parse(data, err);
 
     if (protocol::Name::validate(data)) {
-        user->setName(json["setName"].string_value());
+        user->setName(json[protocol::Name::tag].string_value());
         return;
     }
 
-    if (protocol::Join::validate(data)) {
-        auto room = findByName<Room>(_rooms, json["join"].string_value());
+    if (protocol::Join::validate_request(data)) {
+        auto room = findByName<Room>(_rooms, json[protocol::Join::tag].string_value());
         if (room && !room->containsUser(user)
                  && room->getUserCount() < room->getMaxUsers()) {
+
+            // announce the join
+            auto announce = [&] (int fd) {
+                send(fd, protocol::Join::reply(room->getName(), user->getName()));
+            };
+
+            announce(room->getFd());
+            for (auto userpair : room->getUsers()) {
+                announce(userpair.second->getFd());
+            }
+
+            // add the user to the room
             room->addUser(user);
         }
         return;
@@ -122,7 +134,10 @@ void Server::handle_user_data(int fd, const string& data)
 void Server::handle_room_connect(int fd)
 {
     cout << "Adding room [" << fd << "]." << endl;
-    _rooms[fd] = shared_ptr<Room>(new Room());
+    shared_ptr<Room> room = shared_ptr<Room>(new Room());
+    room->setFd(fd);
+    _rooms[fd] = room;
+
 }
 
 void Server::handle_room_disconnect(int fd)
@@ -134,7 +149,10 @@ void Server::handle_room_disconnect(int fd)
 void Server::handle_user_connect(int fd)
 {
     cout << "Adding user [" << fd << "]." << endl;
-    _users[fd] = shared_ptr<User>(new User());
+    shared_ptr<User> user = shared_ptr<User>(new User());
+    user->setFd(fd);
+    _users[fd] = user;
+
 }
 
 void Server::handle_user_disconnect(int fd)

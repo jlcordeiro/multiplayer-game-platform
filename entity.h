@@ -20,6 +20,14 @@ public:
     {
     }
 
+    int getFd() const {
+        return _fd;
+    }
+
+    void setFd(int value) {
+        _fd = value;
+    }
+
     long int getId() const
     {
         return _id;
@@ -69,6 +77,7 @@ public:
     }
 
 protected:
+    int _fd;
     unsigned long _id;
     string _name;
     map<string,Variable> _variables;
