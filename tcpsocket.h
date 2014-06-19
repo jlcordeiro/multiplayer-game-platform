@@ -5,6 +5,11 @@
 #include <string>
 #include <unistd.h>
 #include <iostream>
+#ifndef __APPLE__
+#include <memory>
+#include <strings.h>
+#include <functional>
+#endif
 #include "psocket.h"
 using namespace std;
 
