@@ -5,7 +5,7 @@ IPATH := -I./deps/
 
 .PHONY: deps
 
-all: deps main game
+all: deps main game client
 
 deps:
 	make -C ./deps/
@@ -33,6 +33,9 @@ main: tcpsocket room server
 
 game: tcpsocket room server
 	$(GPP) gameserver.cpp *.o deps/json11/json11.o $(IPATH) $(LDFLAGS) -o game
+
+client: tcpsocket room server
+	$(GPP) gameclient.cpp *.o deps/json11/json11.o $(IPATH) $(LDFLAGS) -o client
 
 clean:
 	rm tcpsocket.o main

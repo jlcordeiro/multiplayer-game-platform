@@ -33,7 +33,7 @@ void Room::addUser(shared_ptr<User> user)
     _users[user->getId()] = user;
     _user_count++;
 
-    auto str = protocol::Join::str(*user);
+    auto str = protocol::Join::reply(user->getName(), getName());
     for (auto u : _users) {
         send(u.first, str);
     }

@@ -1,7 +1,7 @@
-#include "room.h"
+#include "user.h"
 
 int main(int argc, const char *argv[])
 {
-    GameRoom g;
+    GameUser u;
     return 0;
 }
