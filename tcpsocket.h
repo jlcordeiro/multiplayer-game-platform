@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <unistd.h>
+#include <fcntl.h>
 #include <iostream>
 #ifndef __APPLE__
 #include <memory>
@@ -95,6 +96,7 @@ public:
         : _fd(connect_to_socket(host, port)),
           _running(_fd >= 0)
     {
+        fcntl(_fd, F_SETFL, fcntl(_fd, F_GETFL) | O_NONBLOCK);
     }
 
     ~TCPClient()

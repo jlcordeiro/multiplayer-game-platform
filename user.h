@@ -5,6 +5,8 @@
 #include "config.h"
 #include "entity.h"
 
+class Room;
+
 class User : public Entity
 {
 public:
@@ -31,15 +33,11 @@ public:
         _socket.send(protocol::Name::str(value));
     }
 
-    void joinRoom(string name)
-    {
-        _room_name = name;
-        _socket.send(protocol::Join::request(name));
-    }
+    void joinRoom(const string& name);
 
 private:
     TCPClient _socket;
-    string _room_name;
+    shared_ptr<Room> _my_room;
 };
 
 #endif

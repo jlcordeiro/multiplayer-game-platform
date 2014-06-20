@@ -112,6 +112,8 @@ void Server::handle_user_data(int fd, const string& data)
             announce_join(room->getFd());
             for (auto userpair : room->getUsers()) {
                 announce_join(userpair.second->getFd());
+                // tell the new user who was already on the room
+                send(fd, protocol::Join::reply(room->getName(), userpair.second->getName()));
             }
 
             // add the user to the room
