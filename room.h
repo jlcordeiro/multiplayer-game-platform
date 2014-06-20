@@ -21,6 +21,7 @@ class Room : public Entity
         bool containsUser(shared_ptr<User> user) const;
         void removeUser(shared_ptr<User> user);
         shared_ptr<User> getUserById(long int id);
+        shared_ptr<User> getUserByName(const string& name);
         const map<int, shared_ptr<User> >& getUsers() const;
 
     protected:
@@ -55,6 +56,14 @@ public:
                     shared_ptr<User> user = shared_ptr<User>(new User());
                     user->setName(user_name);
                     addUser(user);
+                }
+
+                if (protocol::Quit::validate_reply(buffer)) {
+                    string user_name = json[protocol::Quit::tag]["user"].string_value();
+                    cout << user_name << " has quit!" << endl;
+
+                    auto user = getUserByName(user_name);
+                    removeUser(user);
                 }
             }
 

@@ -70,6 +70,17 @@ shared_ptr<User> Room::getUserById(long int id)
     return it->second;
 }
 
+shared_ptr<User> Room::getUserByName(const string& name)
+{
+    for (auto userpair : _users) {
+        auto user = userpair.second;
+        if (user->getName() == name) {
+            return user;
+        }
+    }
+
+    return nullptr;
+}
 const map<int, shared_ptr<User> >& Room::getUsers() const
 {
     return _users;

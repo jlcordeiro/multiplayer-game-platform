@@ -36,6 +36,15 @@ public:
 
 };
 
+static string user_room_message(const string& tag,
+                                const string& room_name,
+                                const string& user_name)
+{
+    return Json(Json::object({{tag, Json::object{{"user", user_name},
+                                                 {"room", room_name}}
+                              }})).dump();
+}
+
 class Join
 {
 public:
@@ -60,10 +69,7 @@ public:
 
     static string reply(const string& room_name, const string& user_name)
     {
-        return Json(Json::object({{tag,
-                                   Json::object{{"user", user_name},
-                                                {"room", room_name}}
-                                  }})).dump();
+        return user_room_message(tag, room_name, user_name);
     }
 
 };
@@ -72,16 +78,27 @@ class Quit
 {
 public:
     static const string tag;
-    static const Json::shape shape;
+    static const Json::shape request_shape;
+    static const Json::shape reply_shape;
     
-    static bool validate(const string& msg)
+    static bool validate_request(const string& msg)
     {
-        return has_shape(msg, shape);
+        return has_shape(msg, request_shape);
+    }
+
+    static bool validate_reply(const string& msg)
+    {
+        return has_shape(msg, reply_shape);
     }
 
     static string str(const Entity& u)
     {
         return Json(Json::object({{tag, u.getName()}})).dump();
+    }
+
+    static string reply(const string& room_name, const string& user_name)
+    {
+        return user_room_message(tag, room_name, user_name);
     }
 };
 

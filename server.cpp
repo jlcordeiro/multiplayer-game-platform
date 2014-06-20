@@ -105,13 +105,13 @@ void Server::handle_user_data(int fd, const string& data)
                  && room->getUserCount() < room->getMaxUsers()) {
 
             // announce the join
-            auto announce = [&] (int fd) {
+            auto announce_join = [&] (int fd) {
                 send(fd, protocol::Join::reply(room->getName(), user->getName()));
             };
 
-            announce(room->getFd());
+            announce_join(room->getFd());
             for (auto userpair : room->getUsers()) {
-                announce(userpair.second->getFd());
+                announce_join(userpair.second->getFd());
             }
 
             // add the user to the room
@@ -120,7 +120,7 @@ void Server::handle_user_data(int fd, const string& data)
         return;
     }
 
-    if (protocol::Quit::validate(data)) {
+    if (protocol::Quit::validate_request(data)) {
         auto room = findByName<Room>(_rooms, json["quit"].string_value());
         if (room && room->containsUser(user)) {
             room->removeUser(user);
@@ -162,8 +162,22 @@ void Server::handle_user_disconnect(int fd)
     // remove from rooms
     auto user = _users[fd];
 
+    // announce player is leaving
+    auto announce_quit = [&] (int fd, const string& room_name) {
+        send(fd, protocol::Quit::reply(room_name, user->getName()));
+    };
+
     for (auto r : _rooms) {
-        r.second->removeUser(user);
+        int fd = r.first;
+        auto room = r.second;
+        const string& room_name = room->getName();
+
+        announce_quit(fd, room_name);
+        for (auto userpair : room->getUsers()) {
+            announce_quit(userpair.second->getFd(), room_name);
+        }
+
+        room->removeUser(user);
     }
 
     // delete user
