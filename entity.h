@@ -7,8 +7,6 @@
 #include "tcpsocket.h"
 using namespace std;
 
-typedef json11::Json Variable;
-
 class Entity
 {
     static unsigned long _id_current;
@@ -43,18 +41,18 @@ public:
         _name = value;
     }
 
-    Variable getVariable(string name) const
+    string getVariable(string name) const
     {
         auto it = _variables.find(name);
 
         if (it == _variables.end()) {
-            return nullptr;
+            return "";
         }
 
         return it->second;
     }
 
-    void setVariable(string name, Variable value)
+    virtual void setVariable(const string& name, const string& value)
     {
         if (getVariable(name) != value) {
             _variables[name] = value;
@@ -71,7 +69,7 @@ public:
         _variables.erase(name);
     }
 
-    const map<string, Variable>& getVariables() const
+    const map<string, string>& getVariables() const
     {
         return _variables;
     }
@@ -80,7 +78,7 @@ protected:
     int _fd;
     unsigned long _id;
     string _name;
-    map<string,Variable> _variables;
+    map<string,string> _variables;
 };
 
 #endif

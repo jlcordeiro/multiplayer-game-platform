@@ -36,7 +36,7 @@ Server::Server(const char* rport, const char* uport)
         for (auto u : _users) {
             cout << "<<< [U] " << u.second->getName() << endl;
             for (auto varp : u.second->getVariables()) {
-                cout << "      - " << varp.first << " => " << varp.second.dump() << endl;
+                cout << "      - " << varp.first << " => " << varp.second << endl;
             }
         }
 
@@ -45,7 +45,7 @@ Server::Server(const char* rport, const char* uport)
             cout << "<<< [R] " << r->getName()
                  << " <" << r->getUserCount() << "/" << r->getMaxUsers() << ">" << endl;
             for (auto varp : rp.second->getVariables()) {
-                cout << "      - " << varp.first << " => " << varp.second.dump() << endl;
+                cout << "      - " << varp.first << " => " << varp.second << endl;
             }
         }
 
@@ -57,8 +57,8 @@ static void processVariables(shared_ptr<Entity> entity, Json json)
 {
     string err;
     for (auto & i : json.object_items()) {
-        if (protocol::Variable::validate(i.first)) {
-            entity->setVariable(i.first.substr(1), i.second);
+        if (protocol::Var::validate(i.first)) {
+            entity->setVariable(i.first.substr(1), i.second.dump());
         }
     }
 }
@@ -94,6 +94,8 @@ void Server::handle_user_data(int fd, const string& data)
     std::string err;
     auto json = Json::parse(data, err);
 
+        cout << " ========== " << json[protocol::Var::tag].type() << endl;
+
     if (protocol::Name::validate(data)) {
         user->setName(json[protocol::Name::tag].string_value());
         return;
@@ -127,6 +129,29 @@ void Server::handle_user_data(int fd, const string& data)
         if (room && room->containsUser(user)) {
             room->removeUser(user);
         }
+        return;
+    }
+
+    if (protocol::Var::validate(data)) {
+        auto room = findByName<Room>(_rooms, json[protocol::Var::tag].string_value());
+//         if (room && !room->containsUser(user)
+//                  && room->getUserCount() < room->getMaxUsers()) {
+// 
+//             // announce the join
+//             auto announce_join = [&] (int fd) {
+//                 send(fd, protocol::Join::reply(room->getName(), user->getName()));
+//             };
+// 
+//             announce_join(room->getFd());
+//             for (auto userpair : room->getUsers()) {
+//                 announce_join(userpair.second->getFd());
+//                 // tell the new user who was already on the room
+//                 send(fd, protocol::Join::reply(room->getName(), userpair.second->getName()));
+//             }
+// 
+//             // add the user to the room
+//             room->addUser(user);
+//         }
         return;
     }
 

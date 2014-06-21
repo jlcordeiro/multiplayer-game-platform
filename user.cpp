@@ -31,12 +31,15 @@ void GameUser::dispatch()
                 auto user = _my_room->getUserByName(user_name);
                 _my_room->removeUser(user);
             }
+        }
 
-            for (auto u : _my_room->getUsers()) {
-                auto user = u.second;
-                cout << "<<< [:] " << user->getName() << endl;
-            }
-            cout << " ---- " << endl;
+        cout << " - " << _my_room->getName() << " - " << endl;
+        for (auto varp : _my_room->getVariables()) {
+            cout << "      - " << varp.first << " => " << varp.second << endl;
+        }
+        for (auto u : _my_room->getUsers()) {
+            auto user = u.second;
+            cout << "<<< [:] " << user->getName() << endl;
         }
 
         sleep(1);
@@ -47,5 +50,6 @@ void GameUser::joinRoom(const string& name)
 {
     _my_room = shared_ptr<Room>(new Room());
     _my_room->setName(name);
+    _my_room->addUser(shared_ptr<User>(this));
     _socket.send(protocol::Join::request(name));
 }

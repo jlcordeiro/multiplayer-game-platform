@@ -39,6 +39,7 @@ public:
     {
         setName("Room1");
         setMaxUsers(4);
+        setVariable("var1", "3");
 
         while (1) {
             char buffer[BUF_SIZE] = "";
@@ -82,6 +83,12 @@ public:
     {
         Room::setName(value);
         _socket.send(protocol::Name::str(value));
+    }
+
+    void setVariable(const string& name, const string& value) override
+    {
+        Room::setVariable(name, value);
+        _socket.send(protocol::Var::str(getName(), name, value));
     }
 private:
     TCPClient _socket;

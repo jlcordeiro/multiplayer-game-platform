@@ -1,5 +1,5 @@
 GCC := gcc
-GPP := g++ -std=c++11
+GPP := g++ -std=c++11 -ggdb
 
 IPATH := -I./deps/
 
