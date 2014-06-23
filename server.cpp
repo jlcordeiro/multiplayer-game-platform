@@ -53,16 +53,6 @@ Server::Server(const char* rport, const char* uport)
     }
 }
 
-static void processVariables(shared_ptr<Entity> entity, Json json)
-{
-    string err;
-    for (auto & i : json.object_items()) {
-        if (protocol::Var::validate(i.first)) {
-            entity->setVariable(i.first.substr(1), i.second.dump());
-        }
-    }
-}
-
 void Server::handle_room_data(int fd, const string& data)
 {
     auto room = _rooms[fd];
@@ -82,7 +72,27 @@ void Server::handle_room_data(int fd, const string& data)
         return;
     }
 
-    processVariables(room, json);
+    if (protocol::RVar::validate(data)) {
+        auto obj = json[protocol::RVar::tag];
+        string room_name = obj["room"].string_value();
+        string name = obj["name"].string_value();
+        string value = obj["value"].string_value();
+
+        auto dest_room = findByName<Room>(_rooms, room_name);
+        dest_room->setVariable(name, value);
+        return;
+    }
+
+    if (protocol::UVar::validate(data)) {
+        auto obj = json[protocol::UVar::tag];
+        string user_name = obj["user"].string_value();
+        string name = obj["name"].string_value();
+        string value = obj["value"].string_value();
+
+        auto dest_user = findByName<User>(_users, user_name);
+        dest_user->setVariable(name, value);
+        return;
+    }
 }
 
 void Server::handle_user_data(int fd, const string& data)
@@ -93,8 +103,6 @@ void Server::handle_user_data(int fd, const string& data)
 
     std::string err;
     auto json = Json::parse(data, err);
-
-        cout << " ========== " << json[protocol::Var::tag].type() << endl;
 
     if (protocol::Name::validate(data)) {
         user->setName(json[protocol::Name::tag].string_value());
@@ -125,37 +133,32 @@ void Server::handle_user_data(int fd, const string& data)
     }
 
     if (protocol::Quit::validate_request(data)) {
-        auto room = findByName<Room>(_rooms, json["quit"].string_value());
+        auto room = findByName<Room>(_rooms, json[protocol::Quit::tag].string_value());
         if (room && room->containsUser(user)) {
             room->removeUser(user);
         }
         return;
     }
 
-    if (protocol::Var::validate(data)) {
-        auto room = findByName<Room>(_rooms, json[protocol::Var::tag].string_value());
-//         if (room && !room->containsUser(user)
-//                  && room->getUserCount() < room->getMaxUsers()) {
-// 
-//             // announce the join
-//             auto announce_join = [&] (int fd) {
-//                 send(fd, protocol::Join::reply(room->getName(), user->getName()));
-//             };
-// 
-//             announce_join(room->getFd());
-//             for (auto userpair : room->getUsers()) {
-//                 announce_join(userpair.second->getFd());
-//                 // tell the new user who was already on the room
-//                 send(fd, protocol::Join::reply(room->getName(), userpair.second->getName()));
-//             }
-// 
-//             // add the user to the room
-//             room->addUser(user);
-//         }
+    if (protocol::UVar::validate(data)) {
+        auto obj = json[protocol::UVar::tag];
+        string user_name = obj["user"].string_value();
+        string name = obj["name"].string_value();
+        string value = obj["value"].string_value();
+
+        for (auto room_entry : _rooms) {
+            auto room = room_entry.second;
+            send(room->getFd(), data);
+
+            for (auto user_entry : room->getUsers()) {
+                send(user_entry.second->getFd(), data);
+            }
+        }
+
+        auto dest_user = findByName<User>(_users, user_name);
+        dest_user->setVariable(name, value);
         return;
     }
-
-    processVariables(user, json);
 }
 
 void Server::handle_room_connect(int fd)

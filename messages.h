@@ -119,7 +119,7 @@ public:
     }
 };
 
-class Var
+class RVar
 {
 public:
     static const string tag;
@@ -133,6 +133,26 @@ public:
     static string str(const string& room_name, const string& name, const string& value)
     {
         return Json(Json::object({{tag, Json::object{{"room", room_name},
+                                                     {"name", name},
+                                                     {"value", value}}
+                                  }})).dump();
+    }
+};
+
+class UVar
+{
+public:
+    static const string tag;
+    static const Json::shape shape;
+
+    static bool validate(const string& msg)
+    {
+        return has_shape(msg, shape);
+    }
+
+    static string str(const string& room_name, const string& name, const string& value)
+    {
+        return Json(Json::object({{tag, Json::object{{"user", room_name},
                                                      {"name", name},
                                                      {"value", value}}
                                   }})).dump();

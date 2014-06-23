@@ -35,6 +35,8 @@ public:
 
     void joinRoom(const string& name);
 
+    void setVariable(const string& name, const string& value);
+
 private:
     TCPClient _socket;
     shared_ptr<Room> _my_room;

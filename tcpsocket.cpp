@@ -1,4 +1,3 @@
-#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -124,6 +123,26 @@ void TCPServer::set_connect_fn(shared_ptr<conn_fn_t> f)
 void TCPServer::set_disconnect_fn(shared_ptr<conn_fn_t> f)
 {
     _disconnect_fn = f;
+}
+
+// -----
+
+int TCPClient::recv(vector<string>& recv_messages)
+{
+    char buffer[BUF_SIZE];
+    bzero(buffer, BUF_SIZE);
+
+    auto n = read(_fd, buffer, BUF_SIZE);
+    if (n < 0) {
+        return n;
+    }
+
+    auto tokens = split_string(string(buffer));
+    for (auto sbuf : tokens) {
+        recv_messages.push_back(sbuf);
+    }
+
+    return 0;
 }
 
 // ----

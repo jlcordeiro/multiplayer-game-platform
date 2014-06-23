@@ -2,6 +2,7 @@
 #define TCPSOCKET_H
 
 #include <map>
+#include <vector>
 #include <string>
 #include <unistd.h>
 #include <fcntl.h>
@@ -109,17 +110,7 @@ public:
         return ::send(_fd, msg);
     }
 
-    size_t recv(char* buffer)
-    {
-        bzero(buffer, BUF_SIZE);
-
-        auto n = read(_fd, buffer, BUF_SIZE);
-        if (n < 0) {
-            return n;
-        }
-
-        return n;
-    }
+    int recv(vector<string>& recv_messages);
 };
 
 #endif
