@@ -8,22 +8,28 @@
 #include "messages.h"
 using namespace std;
 
+enum EntityType { NONE, ROOM, USER };
+
 class Entity
 {
     static unsigned long _id_current;
 
 public:
+    static EntityType type;
+
     Entity()
         : _id(_id_current++),
         _name("")
     {
     }
 
-    int getFd() const {
+    int getFd() const
+    {
         return _fd;
     }
 
-    void setFd(int value) {
+    void setFd(int value)
+    {
         _fd = value;
     }
 
@@ -97,7 +103,14 @@ shared_ptr<T> findByName(const map<int,shared_ptr<T>>& group, string name)
 template<class T>
 void handleVariable(const map<int,shared_ptr<T>>& group, json11::Json object)
 {
-    string user_name = object["user"].string_value();
+    string user_name;
+    
+    if (T::type == USER) {
+        user_name = object["user"].string_value();
+    } else {
+        user_name = object["room"].string_value();
+    }
+
     string name = object["name"].string_value();
     string value = object["value"].string_value();
 

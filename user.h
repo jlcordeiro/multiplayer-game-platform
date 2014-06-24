@@ -14,6 +14,8 @@ public:
         : Entity()
     {
     }
+
+    static EntityType type;
 };
 
 class GameUser : public User

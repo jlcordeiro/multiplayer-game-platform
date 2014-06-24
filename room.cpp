@@ -2,6 +2,8 @@
 #include <limits>
 #include "messages.h"
 
+EntityType Room::type = ROOM;
+
 Room::Room()
     : Entity(),
     _max_users(std::numeric_limits<long int>::max()),

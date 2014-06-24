@@ -24,6 +24,8 @@ class Room : public Entity
         shared_ptr<User> getUserByName(const string& name);
         const map<int, shared_ptr<User> >& getUsers() const;
 
+        static EntityType type;
+
     protected:
         map<int,shared_ptr<User> > _users;
         long unsigned int _max_users;

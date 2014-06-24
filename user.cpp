@@ -1,6 +1,8 @@
 #include "user.h"
 #include "room.h"
 
+EntityType User::type = USER;
+
 void GameUser::dispatch()
 {
     srand(time(NULL));
