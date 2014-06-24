@@ -74,10 +74,29 @@ void Server::handle_room_data(int fd, const string& data)
 
     if (protocol::RVar::validate(data)) {
         handleVariable<Room>(_rooms, json[protocol::RVar::tag]);
+
+        for (auto room_entry : _rooms) {
+            auto room = room_entry.second;
+            send(room->getFd(), data);
+
+            for (auto user_entry : room->getUsers()) {
+                send(user_entry.second->getFd(), data);
+            }
+        }
+
     }
 
     if (protocol::UVar::validate(data)) {
         handleVariable<User>(_users, json[protocol::UVar::tag]);
+
+        for (auto room_entry : _rooms) {
+            auto room = room_entry.second;
+            send(room->getFd(), data);
+
+            for (auto user_entry : room->getUsers()) {
+                send(user_entry.second->getFd(), data);
+            }
+        }
     }
 }
 
@@ -110,6 +129,10 @@ void Server::handle_user_data(int fd, const string& data)
                 announce_join(userpair.second->getFd());
                 // tell the new user who was already on the room
                 send(fd, protocol::Join::reply(room->getName(), userpair.second->getName()));
+            }
+            // send the room variables to the new user
+            for (auto varp : room->getVariables()) {
+                send(fd, protocol::RVar::str(room->getName(), varp.first, varp.second));
             }
 
             // add the user to the room

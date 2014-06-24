@@ -2,7 +2,7 @@
 
 int main(int argc, const char *argv[])
 {
-    GameRoom g;
-    g.dispatch();
+    auto g = shared_ptr<GameRoom>(new GameRoom());
+    g->dispatch();
     return 0;
 }

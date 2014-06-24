@@ -59,7 +59,7 @@ public:
         return it->second;
     }
 
-    virtual void setVariable(const string& name, const string& value)
+    void _setVariable(const string& name, const string& value)
     {
         if (getVariable(name) != value) {
             _variables[name] = value;
@@ -101,6 +101,14 @@ shared_ptr<T> findByName(const map<int,shared_ptr<T>>& group, string name)
 }
 
 template<class T>
+void handleVariable(shared_ptr<T> destiny, json11::Json object)
+{
+    string name = object["name"].string_value();
+    string value = object["value"].string_value();
+    destiny->_setVariable(name, value);
+}
+
+template<class T>
 void handleVariable(const map<int,shared_ptr<T>>& group, json11::Json object)
 {
     string user_name;
@@ -111,11 +119,7 @@ void handleVariable(const map<int,shared_ptr<T>>& group, json11::Json object)
         user_name = object["room"].string_value();
     }
 
-    string name = object["name"].string_value();
-    string value = object["value"].string_value();
-
-    auto destiny = findByName<T>(group, user_name);
-    destiny->setVariable(name, value);
+    handleVariable(findByName<T>(group, user_name), object);
 }
 
 #endif

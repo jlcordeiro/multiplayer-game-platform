@@ -43,6 +43,10 @@ void GameUser::dispatch()
                 _my_room->removeUser(user);
             }
 
+            if (protocol::RVar::validate(buffer)) {
+                handleVariable<Room>(_my_room, json[protocol::RVar::tag]);
+            }
+
             if (protocol::UVar::validate(buffer)) {
                 handleVariable<User>(_my_room->getUsers(), json[protocol::UVar::tag]);
             }
@@ -74,6 +78,6 @@ void GameUser::joinRoom(const string& name)
 
 void GameUser::setVariable(const string& name, const string& value)
 {
-    User::setVariable(name, value);
+    _setVariable(name, value);
     _socket.send(protocol::UVar::str(getName(), name, value));
 }

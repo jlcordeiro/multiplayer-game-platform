@@ -32,7 +32,7 @@ class Room : public Entity
         long unsigned int _user_count;
 };
 
-class GameRoom : public Room
+class GameRoom : public Room, public std::enable_shared_from_this<GameRoom>
 {
 public:
     GameRoom()
@@ -56,9 +56,9 @@ public:
         _socket.send(protocol::Name::str(value));
     }
 
-    void setVariable(const string& name, const string& value) override
+    void setVariable(const string& name, const string& value)
     {
-        Room::setVariable(name, value);
+        _setVariable(name, value);
         _socket.send(protocol::RVar::str(getName(), name, value));
     }
 private:

@@ -120,6 +120,10 @@ void GameRoom::dispatch() {
                 removeUser(user);
             }
 
+            if (protocol::RVar::validate(buffer)) {
+                handleVariable<Room>(shared_from_this(), json[protocol::RVar::tag]);
+            }
+
             if (protocol::UVar::validate(buffer)) {
                 handleVariable<User>(_users, json[protocol::UVar::tag]);
             }
