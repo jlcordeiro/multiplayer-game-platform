@@ -5,6 +5,7 @@
 #include <map>
 #include <json11/json11.hpp>
 #include "tcpsocket.h"
+#include "messages.h"
 using namespace std;
 
 class Entity
@@ -80,5 +81,28 @@ protected:
     string _name;
     map<string,string> _variables;
 };
+
+template<class T>
+shared_ptr<T> findByName(const map<int,shared_ptr<T>>& group, string name)
+{
+    for (auto entity : group) {
+        if (entity.second->getName() == name) {
+            return entity.second;
+        }
+    }
+
+    return nullptr;
+}
+
+template<class T>
+void handleVariable(const map<int,shared_ptr<T>>& group, json11::Json object)
+{
+    string user_name = object["user"].string_value();
+    string name = object["name"].string_value();
+    string value = object["value"].string_value();
+
+    auto destiny = findByName<T>(group, user_name);
+    destiny->setVariable(name, value);
+}
 
 #endif

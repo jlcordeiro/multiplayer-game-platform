@@ -73,25 +73,11 @@ void Server::handle_room_data(int fd, const string& data)
     }
 
     if (protocol::RVar::validate(data)) {
-        auto obj = json[protocol::RVar::tag];
-        string room_name = obj["room"].string_value();
-        string name = obj["name"].string_value();
-        string value = obj["value"].string_value();
-
-        auto dest_room = findByName<Room>(_rooms, room_name);
-        dest_room->setVariable(name, value);
-        return;
+        handleVariable<Room>(_rooms, json[protocol::RVar::tag]);
     }
 
     if (protocol::UVar::validate(data)) {
-        auto obj = json[protocol::UVar::tag];
-        string user_name = obj["user"].string_value();
-        string name = obj["name"].string_value();
-        string value = obj["value"].string_value();
-
-        auto dest_user = findByName<User>(_users, user_name);
-        dest_user->setVariable(name, value);
-        return;
+        handleVariable<User>(_users, json[protocol::UVar::tag]);
     }
 }
 
@@ -141,10 +127,7 @@ void Server::handle_user_data(int fd, const string& data)
     }
 
     if (protocol::UVar::validate(data)) {
-        auto obj = json[protocol::UVar::tag];
-        string user_name = obj["user"].string_value();
-        string name = obj["name"].string_value();
-        string value = obj["value"].string_value();
+        handleVariable<User>(_users, json[protocol::UVar::tag]);
 
         for (auto room_entry : _rooms) {
             auto room = room_entry.second;
@@ -154,10 +137,6 @@ void Server::handle_user_data(int fd, const string& data)
                 send(user_entry.second->getFd(), data);
             }
         }
-
-        auto dest_user = findByName<User>(_users, user_name);
-        dest_user->setVariable(name, value);
-        return;
     }
 }
 

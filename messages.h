@@ -1,10 +1,10 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-#include "entity.h"
 #include <string>
 #include <json11/json11.hpp>
 using json11::Json;
+using namespace std;
 
 bool isVariable(const std::string& msg, std::string& err);
 
@@ -91,9 +91,9 @@ public:
         return has_shape(msg, reply_shape);
     }
 
-    static string str(const Entity& u)
+    static string str(const string& name)
     {
-        return Json(Json::object({{tag, u.getName()}})).dump();
+        return Json(Json::object({{tag, name}})).dump();
     }
 
     static string reply(const string& room_name, const string& user_name)

@@ -5,21 +5,10 @@
 #include <iostream>
 #include <unistd.h>
 #include <functional>
+#include "entity.h"
 #include "room.h"
 #include "user.h"
 #include "tcpsocket.h"
-
-template<class T>
-shared_ptr<T> findByName(map<int,shared_ptr<T> > group, string name)
-{
-    for (auto entity : group) {
-        if (entity.second->getName() == name) {
-            return entity.second;
-        }
-    }
-
-    return nullptr;
-}
 
 class Server
 {

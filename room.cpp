@@ -50,7 +50,7 @@ void Room::removeUser(shared_ptr<User> user)
         return;
     }
 
-    auto str = protocol::Quit::str(*user);
+    auto str = protocol::Quit::str(user->getName());
     for (auto u : _users) {
         send(u.first, str);
     }
@@ -72,15 +72,9 @@ shared_ptr<User> Room::getUserById(long int id)
 
 shared_ptr<User> Room::getUserByName(const string& name)
 {
-    for (auto userpair : _users) {
-        auto user = userpair.second;
-        if (user->getName() == name) {
-            return user;
-        }
-    }
-
-    return nullptr;
+    return findByName<User>(_users, name);
 }
+
 const map<int, shared_ptr<User> >& Room::getUsers() const
 {
     return _users;
@@ -125,13 +119,7 @@ void GameRoom::dispatch() {
             }
 
             if (protocol::UVar::validate(buffer)) {
-                auto obj = json[protocol::UVar::tag];
-                string user_name = obj["user"].string_value();
-                string name = obj["name"].string_value();
-                string value = obj["value"].string_value();
-
-                auto user = getUserByName(user_name);
-                user->setVariable(name, value);
+                handleVariable<User>(_users, json[protocol::UVar::tag]);
             }
         }
 
@@ -146,7 +134,6 @@ void GameRoom::dispatch() {
             }
         }
 
-        cout << "@@ " << getUserCount() << endl;
         sleep(1);
     }
 }

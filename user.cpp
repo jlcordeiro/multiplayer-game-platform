@@ -42,13 +42,7 @@ void GameUser::dispatch()
             }
 
             if (protocol::UVar::validate(buffer)) {
-                auto obj = json[protocol::UVar::tag];
-                string user_name = obj["user"].string_value();
-                string name = obj["name"].string_value();
-                string value = obj["value"].string_value();
-
-                auto user = _my_room->getUserByName(user_name);
-                user->setVariable(name, value);
+                handleVariable<User>(_my_room->getUsers(), json[protocol::UVar::tag]);
             }
         }
 
@@ -81,4 +75,3 @@ void GameUser::setVariable(const string& name, const string& value)
     User::setVariable(name, value);
     _socket.send(protocol::UVar::str(getName(), name, value));
 }
-
