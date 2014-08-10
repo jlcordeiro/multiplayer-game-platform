@@ -85,10 +85,6 @@ const map<int, shared_ptr<User> >& Room::getUsers() const
 // ---
 
 void GameRoom::dispatch() {
-    setName("Room1");
-    setMaxUsers(4);
-    setVariable("var1", "3");
-
     while (1) {
         char buffer[BUF_SIZE] = "";
 

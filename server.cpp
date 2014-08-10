@@ -48,6 +48,7 @@ Server::Server(const char* rport, const char* uport)
                 cout << "      - " << varp.first << " => " << varp.second << endl;
             }
         }
+        cout << endl << endl;
 
         usleep(1000000);
     }
@@ -63,6 +64,11 @@ void Server::handle_room_data(int fd, const string& data)
     auto json = Json::parse(data, err);
 
     if (protocol::Name::validate(data)) {
+        auto room = findByName<Room>(_rooms, json[protocol::Join::tag].string_value());
+        if (room) {
+            return handle_room_disconnect(room->getFd());
+        }
+
         room->setName(json[protocol::Name::tag].string_value());
         return;
     }
@@ -169,7 +175,6 @@ void Server::handle_room_connect(int fd)
     shared_ptr<Room> room = shared_ptr<Room>(new Room());
     room->setFd(fd);
     _rooms[fd] = room;
-
 }
 
 void Server::handle_room_disconnect(int fd)
