@@ -70,12 +70,12 @@ void Server::handle_room_data(int fd, const string& data)
     auto json = Json::parse(data, err);
 
     if (protocol::Name::validate(data)) {
-        auto room = findByName<Room>(_rooms, json[protocol::Join::tag].string_value());
-        if (room) {
-            return handle_room_disconnect(room->getFd());
+        auto name = json[protocol::Name::tag].string_value();
+        if (findByName<Room>(_rooms, name) != nullptr) {
+            return handle_room_disconnect(fd);
         }
 
-        room->setName(json[protocol::Name::tag].string_value());
+        room->setName(name);
         return;
     }
 
