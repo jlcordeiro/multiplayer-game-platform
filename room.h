@@ -27,7 +27,7 @@ class Room : public Entity
         static EntityType type;
 
     protected:
-        map<int,shared_ptr<User> > _users;
+        map<int, shared_ptr<User> > _users;
         long unsigned int _max_users;
         long unsigned int _user_count;
 };

@@ -91,9 +91,10 @@ protected:
 template<class T>
 shared_ptr<T> findByName(const map<int,shared_ptr<T>>& group, string name)
 {
-    for (auto entity : group) {
-        if (entity.second->getName() == name) {
-            return entity.second;
+    for (auto entity_pair : group) {
+        auto entity = entity_pair.second;
+        if (entity && entity->getName() == name) {
+            return entity;
         }
     }
 

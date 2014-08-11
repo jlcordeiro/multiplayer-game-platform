@@ -42,6 +42,8 @@ Server::Server(const char* rport, const char* uport)
 
         for (auto rp : _rooms) {
             shared_ptr<Room> r = rp.second;
+            if (r == nullptr) continue;
+
             cout << "<<< [R] " << r->getName()
                  << " <" << r->getUserCount() << "/" << r->getMaxUsers() << ">" << endl;
             for (auto varp : rp.second->getVariables()) {
@@ -57,6 +59,10 @@ Server::Server(const char* rport, const char* uport)
 void Server::handle_room_data(int fd, const string& data)
 {
     auto room = _rooms[fd];
+
+    if (!room) {
+        return;
+    }
 
     cout << "[" << fd << "/" << room->getName() << "] >> " << data << endl;
 

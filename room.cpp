@@ -90,9 +90,10 @@ void GameRoom::dispatch() {
 
         vector<string> new_messages;
         int res = _socket.recv(new_messages);
-        //             if (res < 0) {
-        //                 return;
-        //             }
+        cout << "n: " << res << endl;
+        if (res < 0) {
+            return;
+        }
 
         for (auto buffer : new_messages) {
             std::string err;
