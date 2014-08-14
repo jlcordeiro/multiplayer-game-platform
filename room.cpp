@@ -2,88 +2,6 @@
 #include <limits>
 #include "messages.h"
 
-EntityType Room::type = ROOM;
-
-Room::Room()
-    : Entity(),
-    _max_users(std::numeric_limits<long int>::max()),
-    _user_count(0)
-{
-}
-
-long int Room::getUserCount() const
-{
-    return _user_count;
-}
-
-long int Room::getMaxUsers() const
-{
-    return _max_users;
-}
-
-void Room::setMaxUsers(long int value)
-{
-    _max_users = value;
-}
-
-void Room::addUser(shared_ptr<User> user)
-{
-    if (containsUser(user)) {
-        return;
-    }
-
-    _users[user->getId()] = user;
-    _user_count++;
-
-    auto str = protocol::Join::reply(user->getName(), getName());
-    for (auto u : _users) {
-        send(u.first, str);
-    }
-}
-
-bool Room::containsUser(shared_ptr<User> user) const
-{
-    return (_users.find(user->getId()) != _users.end());
-}
-
-void Room::removeUser(shared_ptr<User> user)
-{
-    if (!containsUser(user)) {
-        return;
-    }
-
-    auto str = protocol::Quit::str(user->getName());
-    for (auto u : _users) {
-        send(u.first, str);
-    }
-
-    _users.erase(user->getId());
-    _user_count--;
-}
-
-shared_ptr<User> Room::getUserById(long int id)
-{
-    auto it = _users.find(id);
-
-    if (it == _users.end()) {
-        return shared_ptr<User>(NULL);
-    }
-
-    return it->second;
-}
-
-shared_ptr<User> Room::getUserByName(const string& name)
-{
-    return findByName<User>(_users, name);
-}
-
-const map<int, shared_ptr<User> >& Room::getUsers() const
-{
-    return _users;
-}
-
-// ---
-
 void GameRoom::dispatch() {
     while (1) {
         char buffer[BUF_SIZE] = "";
@@ -104,25 +22,25 @@ void GameRoom::dispatch() {
                 string user_name = json[protocol::Join::tag]["user"].string_value();
                 cout << user_name << " joined!" << endl;
 
-                shared_ptr<User> user = shared_ptr<User>(new User());
+                shared_ptr<Entity> user = shared_ptr<Entity>(new Entity(USER, 1));
                 user->setName(user_name);
-                addUser(user);
+                addRelation(user);
             }
 
             if (protocol::Quit::validate_reply(buffer)) {
                 string user_name = json[protocol::Quit::tag]["user"].string_value();
                 cout << user_name << " has quit!" << endl;
 
-                auto user = getUserByName(user_name);
-                removeUser(user);
+                auto user = getRelationByName(user_name);
+                removeRelation(user);
             }
 
             if (protocol::RVar::validate(buffer)) {
-                handleVariable<Room>(shared_from_this(), json[protocol::RVar::tag]);
+                handleVariable<Entity>(shared_from_this(), json[protocol::RVar::tag]);
             }
 
             if (protocol::UVar::validate(buffer)) {
-                handleVariable<User>(_users, json[protocol::UVar::tag]);
+                handleVariable<Entity>(_relations, json[protocol::UVar::tag]);
             }
         }
 
@@ -130,7 +48,7 @@ void GameRoom::dispatch() {
             cout << "~ " << varp.first << " => " << varp.second << endl;
         }
 
-        for (auto u : _users) {
+        for (auto u : _relations) {
             cout << "<<< [U] " << u.second->getName() << endl;
             for (auto varp : u.second->getVariables()) {
                 cout << "      - " << varp.first << " => " << varp.second << endl;

@@ -6,37 +6,14 @@
 #include "entity.h"
 #include "messages.h"
 #include <memory>
+#include <limits>
 using namespace std;
 
-class Room : public Entity
-{
-    public:
-        Room();
-
-        long int getUserCount() const;
-        long int getMaxUsers() const;
-        virtual void setMaxUsers(long int value);
-
-        void addUser(shared_ptr<User> user);
-        bool containsUser(shared_ptr<User> user) const;
-        void removeUser(shared_ptr<User> user);
-        shared_ptr<User> getUserById(long int id);
-        shared_ptr<User> getUserByName(const string& name);
-        const map<int, shared_ptr<User> >& getUsers() const;
-
-        static EntityType type;
-
-    protected:
-        map<int, shared_ptr<User> > _users;
-        long unsigned int _max_users;
-        long unsigned int _user_count;
-};
-
-class GameRoom : public Room, public std::enable_shared_from_this<GameRoom>
+class GameRoom : public Entity, public std::enable_shared_from_this<GameRoom>
 {
 public:
     GameRoom()
-        : Room(),
+        : Entity(ROOM, std::numeric_limits<long int>::max()),
           _socket("localhost", atoi(Config::ROOM_PORT))
     {
     }
@@ -44,15 +21,15 @@ public:
     void dispatch();
 
 
-    void setMaxUsers(long int value) override
+    void setMaxRelations(long int value) override
     {
-        Room::setMaxUsers(value);
+        Entity::setMaxRelations(value);
         _socket.send(protocol::MaxUsers::str(value));
     }
 
     void setName(string value) override
     {
-        Room::setName(value);
+        Entity::setName(value);
         _socket.send(protocol::Name::str(value));
     }
 

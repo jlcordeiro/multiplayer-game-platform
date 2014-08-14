@@ -6,8 +6,6 @@
 #include <unistd.h>
 #include <functional>
 #include "entity.h"
-#include "room.h"
-#include "user.h"
 #include "tcpsocket.h"
 
 class Server
@@ -16,8 +14,8 @@ private:
     TCPServer _rooms_socket;
     TCPServer _users_socket;
 
-    map<int,shared_ptr<Room> > _rooms;
-    map<int,shared_ptr<User> > _users;
+    map<int,shared_ptr<Entity> > _rooms;
+    map<int,shared_ptr<Entity> > _users;
 
     void handle_user_data(int fd, const string& data);
     void handle_room_data(int fd, const string& data);

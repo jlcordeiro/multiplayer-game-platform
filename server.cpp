@@ -41,11 +41,11 @@ Server::Server(const char* rport, const char* uport)
         }
 
         for (auto rp : _rooms) {
-            shared_ptr<Room> r = rp.second;
+            shared_ptr<Entity> r = rp.second;
             if (r == nullptr) continue;
 
             cout << "<<< [R] " << r->getName()
-                 << " <" << r->getUserCount() << "/" << r->getMaxUsers() << ">" << endl;
+                 << " <" << r->getRelationCount() << "/" << r->getMaxRelations() << ">" << endl;
             for (auto varp : rp.second->getVariables()) {
                 cout << "      - " << varp.first << " => " << varp.second << endl;
             }
@@ -71,7 +71,7 @@ void Server::handle_room_data(int fd, const string& data)
 
     if (protocol::Name::validate(data)) {
         auto name = json[protocol::Name::tag].string_value();
-        if (findByName<Room>(_rooms, name) != nullptr) {
+        if (findByName<Entity>(_rooms, name) != nullptr) {
             return handle_room_disconnect(fd);
         }
 
@@ -80,18 +80,18 @@ void Server::handle_room_data(int fd, const string& data)
     }
 
     if (protocol::MaxUsers::validate(data)) {
-        room->setMaxUsers(json["maxUsers"].int_value());
+        room->setMaxRelations(json["maxUsers"].int_value());
         return;
     }
 
     if (protocol::RVar::validate(data)) {
-        handleVariable<Room>(_rooms, json[protocol::RVar::tag]);
+        handleVariable<Entity>(_rooms, json[protocol::RVar::tag]);
 
         for (auto room_entry : _rooms) {
             auto room = room_entry.second;
             send(room->getFd(), data);
 
-            for (auto user_entry : room->getUsers()) {
+            for (auto user_entry : room->getRelations()) {
                 send(user_entry.second->getFd(), data);
             }
         }
@@ -99,13 +99,13 @@ void Server::handle_room_data(int fd, const string& data)
     }
 
     if (protocol::UVar::validate(data)) {
-        handleVariable<User>(_users, json[protocol::UVar::tag]);
+        handleVariable<Entity>(_users, json[protocol::UVar::tag]);
 
         for (auto room_entry : _rooms) {
             auto room = room_entry.second;
             send(room->getFd(), data);
 
-            for (auto user_entry : room->getUsers()) {
+            for (auto user_entry : room->getRelations()) {
                 send(user_entry.second->getFd(), data);
             }
         }
@@ -127,9 +127,9 @@ void Server::handle_user_data(int fd, const string& data)
     }
 
     if (protocol::Join::validate_request(data)) {
-        auto room = findByName<Room>(_rooms, json[protocol::Join::tag].string_value());
-        if (room && !room->containsUser(user)
-                 && room->getUserCount() < room->getMaxUsers()) {
+        auto room = findByName<Entity>(_rooms, json[protocol::Join::tag].string_value());
+        if (room && !room->containsRelation(user)
+                 && room->getRelationCount() < room->getMaxRelations()) {
 
             // announce the join
             auto announce_join = [&] (int fd) {
@@ -137,7 +137,7 @@ void Server::handle_user_data(int fd, const string& data)
             };
 
             announce_join(room->getFd());
-            for (auto userpair : room->getUsers()) {
+            for (auto userpair : room->getRelations()) {
                 announce_join(userpair.second->getFd());
                 // tell the new user who was already on the room
                 send(fd, protocol::Join::reply(room->getName(), userpair.second->getName()));
@@ -148,27 +148,27 @@ void Server::handle_user_data(int fd, const string& data)
             }
 
             // add the user to the room
-            room->addUser(user);
+            room->addRelation(user);
         }
         return;
     }
 
     if (protocol::Quit::validate_request(data)) {
-        auto room = findByName<Room>(_rooms, json[protocol::Quit::tag].string_value());
-        if (room && room->containsUser(user)) {
-            room->removeUser(user);
+        auto room = findByName<Entity>(_rooms, json[protocol::Quit::tag].string_value());
+        if (room && room->containsRelation(user)) {
+            room->removeRelation(user);
         }
         return;
     }
 
     if (protocol::UVar::validate(data)) {
-        handleVariable<User>(_users, json[protocol::UVar::tag]);
+        handleVariable<Entity>(_users, json[protocol::UVar::tag]);
 
         for (auto room_entry : _rooms) {
             auto room = room_entry.second;
             send(room->getFd(), data);
 
-            for (auto user_entry : room->getUsers()) {
+            for (auto user_entry : room->getRelations()) {
                 send(user_entry.second->getFd(), data);
             }
         }
@@ -178,7 +178,7 @@ void Server::handle_user_data(int fd, const string& data)
 void Server::handle_room_connect(int fd)
 {
     cout << "Adding room [" << fd << "]." << endl;
-    shared_ptr<Room> room = shared_ptr<Room>(new Room());
+    shared_ptr<Entity> room = shared_ptr<Entity>(new Entity(ROOM, 1000));
     room->setFd(fd);
     _rooms[fd] = room;
 }
@@ -192,7 +192,7 @@ void Server::handle_room_disconnect(int fd)
 void Server::handle_user_connect(int fd)
 {
     cout << "Adding user [" << fd << "]." << endl;
-    shared_ptr<User> user = shared_ptr<User>(new User());
+    shared_ptr<Entity> user = shared_ptr<Entity>(new Entity(USER, 1));
     user->setFd(fd);
     _users[fd] = user;
 
@@ -216,11 +216,11 @@ void Server::handle_user_disconnect(int fd)
         const string& room_name = room->getName();
 
         announce_quit(fd, room_name);
-        for (auto userpair : room->getUsers()) {
+        for (auto userpair : room->getRelations()) {
             announce_quit(userpair.second->getFd(), room_name);
         }
 
-        room->removeUser(user);
+        room->removeRelation(user);
     }
 
     // delete user
