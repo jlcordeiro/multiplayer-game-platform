@@ -33,22 +33,15 @@ Server::Server(const char* rport, const char* uport)
         _users_socket.go();
         _rooms_socket.go();
 
-        for (auto u : _users) {
-            cout << "<<< [U] " << u.second->getName() << endl;
-            for (auto varp : u.second->getVariables()) {
-                cout << "      - " << varp.first << " => " << varp.second << endl;
-            }
+        for (auto up : _users) {
+            up.second->print();
         }
 
         for (auto rp : _rooms) {
-            shared_ptr<Entity> r = rp.second;
+            auto r = rp.second;
             if (r == nullptr) continue;
 
-            cout << "<<< [R] " << r->getName()
-                 << " <" << r->getRelationCount() << "/" << r->getMaxRelations() << ">" << endl;
-            for (auto varp : rp.second->getVariables()) {
-                cout << "      - " << varp.first << " => " << varp.second << endl;
-            }
+            r->print();
         }
         cout << endl << endl;
 
@@ -71,7 +64,8 @@ void Server::handle_room_data(int fd, const string& data)
 
     if (protocol::Name::validate(data)) {
         auto name = json[protocol::Name::tag].string_value();
-        if (findByName<Entity>(_rooms, name) != nullptr) {
+        if (findByName<NEntity>(_rooms, name) != nullptr) {
+            cout << "Error in setName" << endl;
             return handle_room_disconnect(fd);
         }
 
@@ -84,8 +78,8 @@ void Server::handle_room_data(int fd, const string& data)
         return;
     }
 
-    if (protocol::RVar::validate(data)) {
-        handleVariable<Entity>(_rooms, json[protocol::RVar::tag]);
+    if (protocol::Var::validate(data)) {
+        handleVariable<NEntity>(_rooms, json[protocol::Var::tag]);
 
         for (auto room_entry : _rooms) {
             auto room = room_entry.second;
@@ -98,18 +92,18 @@ void Server::handle_room_data(int fd, const string& data)
 
     }
 
-    if (protocol::UVar::validate(data)) {
-        handleVariable<Entity>(_users, json[protocol::UVar::tag]);
-
-        for (auto room_entry : _rooms) {
-            auto room = room_entry.second;
-            send(room->getFd(), data);
-
-            for (auto user_entry : room->getRelations()) {
-                send(user_entry.second->getFd(), data);
-            }
-        }
-    }
+//     if (protocol::Var::validate(data)) {
+//         handleVariable<Entity>(_users, json[protocol::Var::tag]);
+// 
+//         for (auto room_entry : _rooms) {
+//             auto room = room_entry.second;
+//             send(room->getFd(), data);
+// 
+//             for (auto user_entry : room->getRelations()) {
+//                 send(user_entry.second->getFd(), data);
+//             }
+//         }
+//     }
 }
 
 void Server::handle_user_data(int fd, const string& data)
@@ -127,7 +121,7 @@ void Server::handle_user_data(int fd, const string& data)
     }
 
     if (protocol::Join::validate_request(data)) {
-        auto room = findByName<Entity>(_rooms, json[protocol::Join::tag].string_value());
+        auto room = findByName<NEntity>(_rooms, json[protocol::Join::tag].string_value());
         if (room && !room->containsRelation(user)
                  && room->getRelationCount() < room->getMaxRelations()) {
 
@@ -144,7 +138,7 @@ void Server::handle_user_data(int fd, const string& data)
             }
             // send the room variables to the new user
             for (auto varp : room->getVariables()) {
-                send(fd, protocol::RVar::str(room->getName(), varp.first, varp.second));
+                send(fd, protocol::Var::str(room->getName(), varp.first, varp.second));
             }
 
             // add the user to the room
@@ -154,15 +148,15 @@ void Server::handle_user_data(int fd, const string& data)
     }
 
     if (protocol::Quit::validate_request(data)) {
-        auto room = findByName<Entity>(_rooms, json[protocol::Quit::tag].string_value());
+        auto room = findByName<NEntity>(_rooms, json[protocol::Quit::tag].string_value());
         if (room && room->containsRelation(user)) {
             room->removeRelation(user);
         }
         return;
     }
 
-    if (protocol::UVar::validate(data)) {
-        handleVariable<Entity>(_users, json[protocol::UVar::tag]);
+    if (protocol::Var::validate(data)) {
+        handleVariable<NEntity>(_users, json[protocol::Var::tag]);
 
         for (auto room_entry : _rooms) {
             auto room = room_entry.second;
@@ -178,7 +172,8 @@ void Server::handle_user_data(int fd, const string& data)
 void Server::handle_room_connect(int fd)
 {
     cout << "Adding room [" << fd << "]." << endl;
-    shared_ptr<Entity> room = shared_ptr<Entity>(new Entity(ROOM, 1000));
+    auto nocomm = shared_ptr<NoCommunication>(NULL);
+    auto room = shared_ptr<NEntity>(new NEntity(ROOM, nocomm, 1000));
     room->setFd(fd);
     _rooms[fd] = room;
 }
@@ -192,10 +187,10 @@ void Server::handle_room_disconnect(int fd)
 void Server::handle_user_connect(int fd)
 {
     cout << "Adding user [" << fd << "]." << endl;
-    shared_ptr<Entity> user = shared_ptr<Entity>(new Entity(USER, 1));
+    auto nocomm = shared_ptr<NoCommunication>(NULL);
+    auto user = shared_ptr<NEntity>(new NEntity(USER, nocomm, 1));
     user->setFd(fd);
     _users[fd] = user;
-
 }
 
 void Server::handle_user_disconnect(int fd)

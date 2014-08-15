@@ -14,8 +14,8 @@ private:
     TCPServer _rooms_socket;
     TCPServer _users_socket;
 
-    map<int,shared_ptr<Entity> > _rooms;
-    map<int,shared_ptr<Entity> > _users;
+    map<int,shared_ptr<NEntity>> _rooms;
+    map<int,shared_ptr<NEntity>> _users;
 
     void handle_user_data(int fd, const string& data);
     void handle_room_data(int fd, const string& data);
