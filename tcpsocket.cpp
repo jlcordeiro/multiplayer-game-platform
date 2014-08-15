@@ -134,7 +134,24 @@ int TCPClient::recv(vector<string>& recv_messages)
 
     auto n = read(_fd, buffer, BUF_SIZE);
     if (n < 0) {
+        int err = errno;
+        switch (err) {
+            case EAGAIN:
+                if (_block) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            case EINTR:
+                return 0;
+            default:
+                return -1;
+        }
         return n;
+    }
+
+    if (n == 0) {
+        return -1;
     }
 
     auto tokens = split_string(string(buffer));

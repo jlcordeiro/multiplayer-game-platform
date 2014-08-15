@@ -90,14 +90,18 @@ int send(int fd, const string& msg);
 class TCPClient {
 private:
     int _fd;
+    bool _block;
     bool _running;
 
 public:
-    TCPClient(const char* host, int port)
+    TCPClient(const char* host, int port, bool block = true)
         : _fd(connect_to_socket(host, port)),
+          _block(block),
           _running(_fd >= 0)
     {
-        fcntl(_fd, F_SETFL, fcntl(_fd, F_GETFL) | O_NONBLOCK);
+        if (!_block) {
+            fcntl(_fd, F_SETFL, fcntl(_fd, F_GETFL) | O_NONBLOCK);
+        }
     }
 
     ~TCPClient()
@@ -110,6 +114,12 @@ public:
         return ::send(_fd, msg);
     }
 
+    /**
+     * \brief Read from the socket, creating a vector with the strings read.
+     * \return  -1 if the socket had an error or was closed.
+     *          0 if nothing was read but socket is still open.
+     *          >0 if something was read. This value is the number of characters read.
+     */
     int recv(vector<string>& recv_messages);
 };
 
