@@ -108,18 +108,10 @@ public:
         _communication->send(protocol::Name::str(value));
     }
 
-    string getVariable(string name) const
-    {
-        auto it = _variables.find(name);
-        if (it == _variables.end()) {
-            return "";
-        }
-        return it->second;
-    }
-
     void setVariable(const string& name, const string& value)
     {
-        if (getVariable(name) != value) {
+        auto it = _variables.find(name);
+        if (it == _variables.end() || it->second != value) {
             _variables[name] = value;
             _communication->send(protocol::Var::str(getName(), name, value));
         }
@@ -190,15 +182,6 @@ public:
     shared_ptr<Entity> getRelationByName(const string& name)
     {
         return findByName<Entity>(_relations, name);
-    }
-
-    shared_ptr<Entity> getRelationById(long int id)
-    {
-        auto it = _relations.find(id);
-        if (it == _relations.end()) {
-            return shared_ptr<Entity>(NULL);
-        }
-        return it->second;
     }
 
     const map<int, shared_ptr<Entity> >& getRelations() const
