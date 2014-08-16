@@ -22,7 +22,7 @@ entity: entity.cpp entity.h
 messages: messages.cpp messages.h 
 	$(GPP) messages.cpp -c $(IPATH)
 
-server: server.h messages
+server: server.h entity messages
 	$(GPP) server.cpp -c $(IPATH)
 
 main: tcpsocket server

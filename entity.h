@@ -41,8 +41,8 @@ void handleVariable(const map<int,shared_ptr<T>>& group, json11::Json object)
 class NoCommunication
 {
 public:
-    int send(const string& msg) {}
-    int recv(vector<string>& recv_messages) {}
+    int send(const string& msg) {return 0;}
+    int recv(vector<string>& recv_messages) {return 0;}
 };
 
 class EntityBase
