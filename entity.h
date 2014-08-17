@@ -2,6 +2,7 @@
 #define ENTITY_H
 
 #include <string>
+#include <vector>
 #include <map>
 #include <json11/json11.hpp>
 #include "tcpsocket.h"
@@ -47,11 +48,13 @@ public:
 
 class EntityBase
 {
-private:
+protected:
     static unsigned long _id_current;
 public:
     template <class Communication> friend class Entity;
 };
+
+template <class T> struct MessageVisitorInterface;
 
 template <class Communication>
 class Entity : public EntityBase, public enable_shared_from_this<Entity<Communication>>
@@ -68,6 +71,8 @@ private:
     map<int, shared_ptr<Entity> > _relations;
     long unsigned int _max_relations;
     long unsigned int _relation_count;
+
+    vector<shared_ptr<MessageVisitorInterface<shared_ptr<Entity>>>> _message_visitors;
 
 public:
     using EntityBase::_id_current;
@@ -215,6 +220,13 @@ public:
 
             for (auto buffer : new_messages) {
                 cout << "<< " << buffer << endl;
+
+                cout << "PRE!" << _message_visitors.size() << endl;
+                for (auto visitor : _message_visitors) {
+                    cout << "RUN!" << endl;
+                    visitor->visit(shared_ptr<Entity>(this), buffer);
+                }
+                cout << "POST!" << _message_visitors.size() << endl;
             }
 
             print();
@@ -232,9 +244,39 @@ public:
 //         addRelation(room);
 //         room->addRelation(shared_ptr<Entity>(this));
     }
+
+    void acceptMessageVisitor(shared_ptr<MessageVisitorInterface<shared_ptr<Entity>>> visitor)
+    {
+        _message_visitors.push_back(visitor);
+    }
 };
 
 typedef Entity<TCPClient> SEntity;
 typedef Entity<NoCommunication> NEntity;
+
+template <class T>
+struct MessageVisitorInterface
+{
+    virtual void visit(T sender, const std::string& buffer) = 0;
+};
+
+template <class T>
+struct JoinMessageVisitor : MessageVisitorInterface<T>
+{
+    void visit(T sender, const std::string& buffer)
+    {
+        string err;
+        auto json = Json::parse(buffer, err);
+        if (protocol::Join::validate_reply(buffer)) {
+            string user_name = json[protocol::Join::tag]["user"].string_value();
+            cout << user_name << " joined!" << endl;
+
+//             shared_ptr<Entity> user = shared_ptr<Entity>(new Entity(USER, 1));
+//             user->setName(user_name);
+//             _my_room->addRelation(user);
+        }
+    }
+};
+
 
 #endif
