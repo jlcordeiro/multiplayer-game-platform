@@ -13,6 +13,9 @@ int main(int argc, const char *argv[])
     auto g = shared_ptr<SEntity>(new SEntity(ROOM, socket, 10));
 
     auto join_visitor = shared_ptr<JoinMessageVisitor<shared_ptr<SEntity>>>(new JoinMessageVisitor<shared_ptr<SEntity>>());
+    auto print_visitor = shared_ptr<PrintMessageVisitor<shared_ptr<SEntity>>>(new PrintMessageVisitor<shared_ptr<SEntity>>());
+
+    g->acceptMessageVisitor(print_visitor);
     g->acceptMessageVisitor(join_visitor);
 
     g->setName(string(argv[1]));

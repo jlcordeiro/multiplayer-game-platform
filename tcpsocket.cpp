@@ -38,7 +38,10 @@ static vector<string> split_string(const string& str)
     }
 
     // To get the last substring (or only, if delimiter is not found)
-    strings.push_back(str.substr(prev));
+    string new_str = str.substr(prev);
+    if (new_str.size() > 0) {
+        strings.push_back(new_str);
+    }
 
     return strings;
 }

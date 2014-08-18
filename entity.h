@@ -218,15 +218,10 @@ public:
                 return;
             }
 
-            for (auto buffer : new_messages) {
-                cout << "<< " << buffer << endl;
-
-                cout << "PRE!" << _message_visitors.size() << endl;
-                for (auto visitor : _message_visitors) {
-                    cout << "RUN!" << endl;
-                    visitor->visit(shared_ptr<Entity>(this), buffer);
+            for (auto visitor : _message_visitors) {
+                for (auto buffer : new_messages) {
+                    visitor->visit(this->shared_from_this(), buffer);
                 }
-                cout << "POST!" << _message_visitors.size() << endl;
             }
 
             print();
@@ -242,7 +237,7 @@ public:
 //         room->setName(name);
 // 
 //         addRelation(room);
-//         room->addRelation(shared_ptr<Entity>(this));
+//         room->addRelation(this->shared_from_this());
     }
 
     void acceptMessageVisitor(shared_ptr<MessageVisitorInterface<shared_ptr<Entity>>> visitor)
@@ -258,6 +253,15 @@ template <class T>
 struct MessageVisitorInterface
 {
     virtual void visit(T sender, const std::string& buffer) = 0;
+};
+
+template <class T>
+struct PrintMessageVisitor : MessageVisitorInterface<T>
+{
+    void visit(T sender, const std::string& buffer)
+    {
+        cout << "[" << sender->getName() << "] >> " << buffer << endl;
+    }
 };
 
 template <class T>
