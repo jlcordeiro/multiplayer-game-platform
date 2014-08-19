@@ -88,7 +88,7 @@ int send(int fd, const string& msg);
 class TCPClient {
 private:
     int _fd;
-    bool _block;
+    const bool _block;
 
 public:
     TCPClient(const char* host, int port, bool block = true)

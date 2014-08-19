@@ -37,19 +37,45 @@ void handleVariable(const map<int,shared_ptr<T>>& group, json11::Json object)
     handleVariable(from, object);
 }
 
-class NoCommunication
+class Communication
 {
 public:
-    int send(const string& msg) {return 0;}
-    int recv(vector<string>& recv_messages) {return 0;}
+    virtual int send(const string& msg) = 0;
+    virtual int recv(vector<string>& recv_messages) = 0;
 };
 
-class EntityBase
+class NoCommunication : public Communication
 {
 public:
-    typedef function<void(EntityBase& sender, const std::string& buffer)> Visitor;
+    int send(const string& msg) override {return 0;}
+    int recv(vector<string>& recv_messages) override {return 0;}
+};
 
-    EntityBase() : _id(_id_current++), _fd(-1), _name("") {};
+class TCPCommunication : public Communication
+{
+private:
+    TCPClient& _socket;
+public:
+    TCPCommunication(TCPClient& s) : _socket(s) {}
+    int send(const string& msg) override {return _socket.send(msg);}
+    int recv(vector<string>& recv_messages) override {return _socket.recv(recv_messages);}
+};
+
+
+class Entity : public enable_shared_from_this<Entity>
+{
+public:
+    typedef function<void(Entity& sender, const std::string& buffer)> Visitor;
+
+    Entity(shared_ptr<Communication> c, long unsigned int max_relations)
+        : _id(_id_current++),
+          _fd(-1),
+          _name(""),
+          _communication(c),
+          _max_relations(max_relations),
+          _relation_count(0)
+    {
+    }
 
     long int getId() const
     {
@@ -84,43 +110,6 @@ public:
     const map<string, string>& getVariables() const
     {
         return _variables;
-    }
-
-    void acceptMessageVisitor(Visitor visitor)
-    {
-        _message_visitors.push_back(visitor);
-    }
-
-    template <class Communication> friend class Entity;
-
-private:
-    static unsigned long _id_current;
-    unsigned long _id;
-    int _fd;
-    string _name;
-    map<string,string> _variables;
-
-    vector<Visitor> _message_visitors;
-};
-
-template <class T> struct MessageVisitorInterface;
-
-template <class Communication>
-class Entity : public EntityBase, public enable_shared_from_this<Entity<Communication>>
-{
-private:
-    shared_ptr<Communication> _communication;
-
-    map<int, shared_ptr<Entity> > _relations;
-    long unsigned int _max_relations;
-    long unsigned int _relation_count;
-
-public:
-    Entity(shared_ptr<Communication> c, long unsigned int max_relations)
-        : _communication(c),
-          _max_relations(max_relations),
-          _relation_count(0)
-    {
     }
 
     void setName(string value)
@@ -190,9 +179,14 @@ public:
         return findByName<Entity>(_relations, name);
     }
 
-    const map<int, shared_ptr<Entity> >& getRelations() const
+    const map<int, shared_ptr<Entity>>& getRelations() const
     {
         return _relations;
+    }
+
+    void acceptMessageVisitor(Visitor visitor)
+    {
+        _message_visitors.push_back(visitor);
     }
 
     void print()
@@ -221,7 +215,7 @@ public:
 
             for (auto visitor : _message_visitors) {
                 for (auto buffer : new_messages) {
-                    visitor(*(this), buffer);
+                    visitor(*this, buffer);
                 }
             }
 
@@ -232,20 +226,32 @@ public:
 
     void joinRoom(const string& name)
     {
+        auto comm = shared_ptr<Communication>(new NoCommunication());
+        auto room = shared_ptr<Entity>(new Entity(comm, 1000));
+        room->setName(name);
+
+        addRelation(room);
+        room->addRelation(this->shared_from_this());
+
         _communication->send(protocol::Join::request(name));
-
-//         auto room = shared_ptr<NEntity>(new NEntity(ROOM, 1000));
-//         room->setName(name);
-// 
-//         addRelation(room);
-//         room->addRelation(this->shared_from_this());
     }
+
+private:
+    static unsigned long _id_current;
+
+    unsigned long _id;
+    int _fd;
+    string _name;
+
+    map<string,string> _variables;
+
+    shared_ptr<Communication> _communication;
+
+    map<int, shared_ptr<Entity>> _relations;
+    long unsigned int _max_relations;
+    long unsigned int _relation_count;
+
+    vector<Visitor> _message_visitors;
 };
-
-typedef Entity<TCPClient> SEntity;
-typedef Entity<NoCommunication> NEntity;
-
-void printMessage(EntityBase& sender, const std::string& buffer);
-void handleJoin(EntityBase& sender, const std::string& buffer);
 
 #endif
