@@ -35,4 +35,4 @@ client: tcpsocket server
 	$(GPP) gameclient.cpp *.o deps/json11/json11.o $(IPATH) $(LDFLAGS) -o client
 
 clean:
-	rm tcpsocket.o main
+	rm *.o main

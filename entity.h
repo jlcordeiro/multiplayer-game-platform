@@ -9,8 +9,6 @@
 #include "messages.h"
 using namespace std;
 
-enum EntityType { NONE, ROOM, USER };
-
 template<class T>
 shared_ptr<T> findByName(const map<int,shared_ptr<T>>& group, string name)
 {
@@ -48,54 +46,10 @@ public:
 
 class EntityBase
 {
-protected:
-    static unsigned long _id_current;
 public:
-    template <class Communication> friend class Entity;
-};
+    typedef function<void(EntityBase& sender, const std::string& buffer)> Visitor;
 
-template <class T> struct MessageVisitorInterface;
-
-template <class Communication>
-class Entity : public EntityBase, public enable_shared_from_this<Entity<Communication>>
-{
-private:
-    int _fd;
-    unsigned long _id;
-    string _name;
-    map<string,string> _variables;
-    shared_ptr<Communication> _communication;
-
-    EntityType _type;
-
-    map<int, shared_ptr<Entity> > _relations;
-    long unsigned int _max_relations;
-    long unsigned int _relation_count;
-
-    vector<shared_ptr<MessageVisitorInterface<shared_ptr<Entity>>>> _message_visitors;
-
-public:
-    using EntityBase::_id_current;
-
-    Entity(EntityType type, shared_ptr<Communication> c, long unsigned int max_relations)
-        : _id(_id_current++),
-          _name(""),
-          _communication(c),
-          _type(type),
-          _max_relations(max_relations),
-          _relation_count(0)
-    {
-    }
-
-    int getFd() const
-    {
-        return _fd;
-    }
-
-    void setFd(int value)
-    {
-        _fd = value;
-    }
+    EntityBase() : _id(_id_current++), _name("") {};
 
     long int getId() const
     {
@@ -107,19 +61,14 @@ public:
         return _name;
     }
 
-    void setName(string value)
+    int getFd() const
     {
-        _name = value;
-        _communication->send(protocol::Name::str(value));
+        return _fd;
     }
 
-    void setVariable(const string& name, const string& value)
+    void setFd(int value)
     {
-        auto it = _variables.find(name);
-        if (it == _variables.end() || it->second != value) {
-            _variables[name] = value;
-            _communication->send(protocol::Var::str(getName(), name, value));
-        }
+        _fd = value;
     }
 
     bool containsVariable(string name) const
@@ -135,6 +84,58 @@ public:
     const map<string, string>& getVariables() const
     {
         return _variables;
+    }
+
+    void acceptMessageVisitor(Visitor visitor)
+    {
+        _message_visitors.push_back(visitor);
+    }
+
+    template <class Communication> friend class Entity;
+
+private:
+    static unsigned long _id_current;
+    unsigned long _id;
+    int _fd;
+    string _name;
+    map<string,string> _variables;
+
+    vector<Visitor> _message_visitors;
+};
+
+template <class T> struct MessageVisitorInterface;
+
+template <class Communication>
+class Entity : public EntityBase, public enable_shared_from_this<Entity<Communication>>
+{
+private:
+    shared_ptr<Communication> _communication;
+
+    map<int, shared_ptr<Entity> > _relations;
+    long unsigned int _max_relations;
+    long unsigned int _relation_count;
+
+public:
+    Entity(shared_ptr<Communication> c, long unsigned int max_relations)
+        : _communication(c),
+          _max_relations(max_relations),
+          _relation_count(0)
+    {
+    }
+
+    void setName(string value)
+    {
+        _name = value;
+        _communication->send(protocol::Name::str(value));
+    }
+
+    void setVariable(const string& name, const string& value)
+    {
+        auto it = _variables.find(name);
+        if (it == _variables.end() || it->second != value) {
+            _variables[name] = value;
+            _communication->send(protocol::Var::str(getName(), name, value));
+        }
     }
 
     long int getRelationCount() const
@@ -220,7 +221,7 @@ public:
 
             for (auto visitor : _message_visitors) {
                 for (auto buffer : new_messages) {
-                    visitor->visit(this->shared_from_this(), buffer);
+                    visitor(*(this), buffer);
                 }
             }
 
@@ -239,48 +240,12 @@ public:
 //         addRelation(room);
 //         room->addRelation(this->shared_from_this());
     }
-
-    void acceptMessageVisitor(shared_ptr<MessageVisitorInterface<shared_ptr<Entity>>> visitor)
-    {
-        _message_visitors.push_back(visitor);
-    }
 };
 
 typedef Entity<TCPClient> SEntity;
 typedef Entity<NoCommunication> NEntity;
 
-template <class T>
-struct MessageVisitorInterface
-{
-    virtual void visit(T sender, const std::string& buffer) = 0;
-};
-
-template <class T>
-struct PrintMessageVisitor : MessageVisitorInterface<T>
-{
-    void visit(T sender, const std::string& buffer)
-    {
-        cout << "[" << sender->getName() << "] >> " << buffer << endl;
-    }
-};
-
-template <class T>
-struct JoinMessageVisitor : MessageVisitorInterface<T>
-{
-    void visit(T sender, const std::string& buffer)
-    {
-        string err;
-        auto json = Json::parse(buffer, err);
-        if (protocol::Join::validate_reply(buffer)) {
-            string user_name = json[protocol::Join::tag]["user"].string_value();
-            cout << user_name << " joined!" << endl;
-
-//             shared_ptr<Entity> user = shared_ptr<Entity>(new Entity(USER, 1));
-//             user->setName(user_name);
-//             _my_room->addRelation(user);
-        }
-    }
-};
-
+void printMessage(EntityBase& sender, const std::string& buffer);
+void handleJoin(EntityBase& sender, const std::string& buffer);
 
 #endif

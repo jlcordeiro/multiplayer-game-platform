@@ -5,7 +5,7 @@
 int main(int argc, const char *argv[])
 {
     auto socket = shared_ptr<TCPClient>(new TCPClient("localhost", atoi(Config::USER_PORT), false));
-    auto u = shared_ptr<SEntity>(new SEntity(USER, socket, 1));
+    auto u = shared_ptr<SEntity>(new SEntity(socket, 1));
 
     srand(time(NULL));
     string user_name;

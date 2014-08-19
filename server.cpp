@@ -173,7 +173,7 @@ void Server::handle_room_connect(int fd)
 {
     cout << "Adding room [" << fd << "]." << endl;
     auto nocomm = shared_ptr<NoCommunication>(NULL);
-    auto room = shared_ptr<NEntity>(new NEntity(ROOM, nocomm, 1000));
+    auto room = shared_ptr<NEntity>(new NEntity(nocomm, 1000));
     room->setFd(fd);
     _rooms[fd] = room;
 }
@@ -188,7 +188,7 @@ void Server::handle_user_connect(int fd)
 {
     cout << "Adding user [" << fd << "]." << endl;
     auto nocomm = shared_ptr<NoCommunication>(NULL);
-    auto user = shared_ptr<NEntity>(new NEntity(USER, nocomm, 1));
+    auto user = shared_ptr<NEntity>(new NEntity(nocomm, 1));
     user->setFd(fd);
     _users[fd] = user;
 }
