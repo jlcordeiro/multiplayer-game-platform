@@ -71,9 +71,12 @@ void TCPServer::recv_data(int socket)
 
 TCPServer::TCPServer(const char* port)
     :   _listener(create_socket(port)),
-        _fdmax(_listener),
-        _running(_listener != -1)
+        _fdmax(_listener)
 {
+    if (_listener == -1) {
+        throw _listener;
+    }
+
     // add the _listener to the master set
     FD_ZERO(&_fds);
     FD_SET(_listener, &_fds);
@@ -137,20 +140,10 @@ int TCPClient::recv(vector<string>& recv_messages)
 
     auto n = read(_fd, buffer, BUF_SIZE);
     if (n < 0) {
-        int err = errno;
-        switch (err) {
-            case EAGAIN:
-                if (_block) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            case EINTR:
-                return 0;
-            default:
-                return -1;
+        if (errno == EINTR || (errno == EAGAIN && !_block)) {
+            return 0;
         }
-        return n;
+        return -1;
     }
 
     if (n == 0) {

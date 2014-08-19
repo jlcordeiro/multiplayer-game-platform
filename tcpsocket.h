@@ -32,8 +32,6 @@ class TCPServer {
         fd_set              _fds;
         /** \brief Max file descriptor number. */
         int                 _fdmax;
-        /** \brief Flag that shows if the server is running. */
-        bool                _running;
 
         /**
          * \brief Handle a new incoming connection.
@@ -91,14 +89,16 @@ class TCPClient {
 private:
     int _fd;
     bool _block;
-    bool _running;
 
 public:
     TCPClient(const char* host, int port, bool block = true)
         : _fd(connect_to_socket(host, port)),
-          _block(block),
-          _running(_fd >= 0)
+          _block(block)
     {
+        if (_fd < 0) {
+            throw _fd;
+        }
+
         if (!_block) {
             fcntl(_fd, F_SETFL, fcntl(_fd, F_GETFL) | O_NONBLOCK);
         }

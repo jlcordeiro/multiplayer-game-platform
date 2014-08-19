@@ -49,7 +49,7 @@ class EntityBase
 public:
     typedef function<void(EntityBase& sender, const std::string& buffer)> Visitor;
 
-    EntityBase() : _id(_id_current++), _name("") {};
+    EntityBase() : _id(_id_current++), _fd(-1), _name("") {};
 
     long int getId() const
     {
