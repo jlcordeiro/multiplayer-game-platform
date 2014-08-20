@@ -5,8 +5,6 @@
 // void GameRoom::dispatch(Entity e, const string& buffer) {
 //     std::string err;
 //     auto json = Json::parse(buffer, err);
-// 
-// 
 //     if (protocol::RVar::validate(buffer)) {
 //         e->handleVariable<Entity>(shared_from_this(), json[protocol::RVar::tag]);
 //     }

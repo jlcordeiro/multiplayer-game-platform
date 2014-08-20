@@ -6,8 +6,6 @@
 using json11::Json;
 using namespace std;
 
-bool isVariable(const std::string& msg, std::string& err);
-
 namespace protocol
 {
 
@@ -33,7 +31,6 @@ public:
     {
         return Json(Json::object({{tag, s}})).dump();
     }
-
 };
 
 static string user_room_message(const string& tag,
@@ -49,54 +46,31 @@ class Join
 {
 public:
     static const string tag;
-    static const Json::shape request_shape;
-    static const Json::shape reply_shape;
+    static const Json::shape shape;
 
-    static bool validate_request(const string& msg)
+    static bool validate(const string& msg)
     {
-        return has_shape(msg, request_shape);
+        return has_shape(msg, shape);
     }
 
-    static bool validate_reply(const string& msg)
-    {
-        return has_shape(msg, reply_shape);
-    }
-
-    static string request(const string& room_name)
-    {
-        return Json(Json::object({{tag, room_name}})).dump();
-    }
-
-    static string reply(const string& room_name, const string& user_name)
+    static string str(const string& room_name, const string& user_name)
     {
         return user_room_message(tag, room_name, user_name);
     }
-
 };
 
 class Quit
 {
 public:
     static const string tag;
-    static const Json::shape request_shape;
-    static const Json::shape reply_shape;
-    
-    static bool validate_request(const string& msg)
+    static const Json::shape shape;
+
+    static bool validate(const string& msg)
     {
-        return has_shape(msg, request_shape);
+        return has_shape(msg, shape);
     }
 
-    static bool validate_reply(const string& msg)
-    {
-        return has_shape(msg, reply_shape);
-    }
-
-    static string str(const string& name)
-    {
-        return Json(Json::object({{tag, name}})).dump();
-    }
-
-    static string reply(const string& room_name, const string& user_name)
+    static string str(const string& room_name, const string& user_name)
     {
         return user_room_message(tag, room_name, user_name);
     }

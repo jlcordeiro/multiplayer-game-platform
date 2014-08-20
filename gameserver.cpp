@@ -2,30 +2,7 @@
 #include "entity.h"
 #include "tcpsocket.h"
 #include <string>
-
-static void handleJoin(Entity& sender, const std::string& buffer)
-{
-    string err;
-    auto json = Json::parse(buffer, err);
-    if (protocol::Join::validate_reply(buffer)) {
-        string user_name = json[protocol::Join::tag]["user"].string_value();
-        auto comm = shared_ptr<Communication>(new NoCommunication());
-        auto user = shared_ptr<Entity>(new Entity(comm, 1));
-        user->setName(user_name);
-        sender.addRelation(user);
-    }
-}
-
-static void handleQuit(Entity& sender, const std::string& buffer)
-{
-    string err;
-    auto json = Json::parse(buffer, err);
-    if (protocol::Quit::validate_reply(buffer)) {
-        string user_name = json[protocol::Quit::tag]["user"].string_value();
-        auto user = sender.getRelationByName(user_name);
-        sender.removeRelation(user);
-    }
-}
+#include <thread>
 
 int main(int argc, const char *argv[])
 {
@@ -48,6 +25,12 @@ int main(int argc, const char *argv[])
     g->setMaxRelations(4);
     g->setVariable("var1", string(argv[2]));
 
-    g->dispatch();
+    thread dispatch([&](){g->dispatch();});
+
+    while (true) {
+        g->print();
+        usleep(500000);
+    }
+
     return 0;
 }

@@ -120,21 +120,16 @@ void Server::handle_user_data(int fd, const string& data)
         return;
     }
 
-    if (protocol::Join::validate_request(data)) {
-        auto room = findByName<Entity>(_rooms, json[protocol::Join::tag].string_value());
+    if (protocol::Join::validate(data)) {
+        auto room = findByName<Entity>(_rooms, json[protocol::Join::tag]["room"].string_value());
         if (room && !room->containsRelation(user)
                  && room->getRelationCount() < room->getMaxRelations()) {
 
-            // announce the join
-            auto announce_join = [&] (int fd) {
-                send(fd, protocol::Join::reply(room->getName(), user->getName()));
-            };
-
-            announce_join(room->getFd());
+            send(room->getFd(), data);
             for (auto userpair : room->getRelations()) {
-                announce_join(userpair.second->getFd());
+                send(userpair.second->getFd(), data);
                 // tell the new user who was already on the room
-                send(fd, protocol::Join::reply(room->getName(), userpair.second->getName()));
+                send(fd, protocol::Join::str(room->getName(), userpair.second->getName()));
             }
             // send the room variables to the new user
             for (auto varp : room->getVariables()) {
@@ -147,11 +142,19 @@ void Server::handle_user_data(int fd, const string& data)
         return;
     }
 
-    if (protocol::Quit::validate_request(data)) {
-        auto room = findByName<Entity>(_rooms, json[protocol::Quit::tag].string_value());
+    if (protocol::Quit::validate(data)) {
+        auto room = findByName<Entity>(_rooms, json[protocol::Quit::tag]["room"].string_value());
         if (room && room->containsRelation(user)) {
             room->removeRelation(user);
+
+            send(room->getFd(), data);
+            for (auto userpair : room->getRelations()) {
+                send(userpair.second->getFd(), data);
+                // tell the new user who was already on the room
+                send(fd, protocol::Quit::str(room->getName(), userpair.second->getName()));
+            }
         }
+
         return;
     }
 
@@ -202,7 +205,7 @@ void Server::handle_user_disconnect(int fd)
 
     // announce player is leaving
     auto announce_quit = [&] (int fd, const string& room_name) {
-        send(fd, protocol::Quit::reply(room_name, user->getName()));
+        send(fd, protocol::Quit::str(room_name, user->getName()));
     };
 
     for (auto r : _rooms) {

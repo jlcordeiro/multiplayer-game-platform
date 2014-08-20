@@ -148,11 +148,6 @@ public:
         if (!containsRelation(e)) {
             _relations[e->getId()] = e;
             _relation_count++;
-
-            auto str = protocol::Join::reply(e->getName(), getName());
-            for (auto u : _relations) {
-                send(u.first, str);
-            }
         }
     }
 
@@ -164,11 +159,6 @@ public:
     void removeRelation(shared_ptr<Entity> e)
     {
         if (containsRelation(e)) {
-            auto str = protocol::Quit::str(e->getName());
-            for (auto u : _relations) {
-                send(u.first, str);
-            }
-
             _relations.erase(e->getId());
             _relation_count--;
         }
@@ -179,7 +169,7 @@ public:
         return findByName<Entity>(_relations, name);
     }
 
-    const map<int, shared_ptr<Entity>>& getRelations() const
+    map<int, shared_ptr<Entity>>& getRelations()
     {
         return _relations;
     }
@@ -189,40 +179,9 @@ public:
         _message_visitors.push_back(visitor);
     }
 
-    void print()
-    {
-        cout << " ------ " << endl;
-        cout << "[" << _fd << "/" << getName() << "]" << endl;
-        for (auto varp : getVariables()) {
-            cout << "~ " << varp.first << " => " << varp.second << endl;
-        }
+    void print();
 
-        for (auto u : _relations) {
-            cout << "<<< [R] " << u.second->getName() << endl;
-            for (auto varp : u.second->getVariables()) {
-                cout << "      - " << varp.first << " => " << varp.second << endl;
-            }
-        }
-    }
-
-    void dispatch() {
-        while (1) {
-            vector<string> new_messages;
-            int res = _communication->recv(new_messages);
-            if (res < 0) {
-                return;
-            }
-
-            for (auto visitor : _message_visitors) {
-                for (auto buffer : new_messages) {
-                    visitor(*this, buffer);
-                }
-            }
-
-            print();
-            sleep(1);
-        }
-    }
+    void dispatch();
 
     void joinRoom(const string& name)
     {
@@ -233,7 +192,7 @@ public:
         addRelation(room);
         room->addRelation(this->shared_from_this());
 
-        _communication->send(protocol::Join::request(name));
+        _communication->send(protocol::Join::str(name, getName()));
     }
 
 private:
@@ -253,5 +212,9 @@ private:
 
     vector<Visitor> _message_visitors;
 };
+
+void handleJoin(Entity& room, const std::string& buffer);
+void handleQuit(Entity& room, const std::string& buffer);
+shared_ptr<Entity> getRoom(Entity& e);
 
 #endif
