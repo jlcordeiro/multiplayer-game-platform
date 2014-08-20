@@ -77,6 +77,11 @@ public:
     {
     }
 
+    Entity(long unsigned int max_relations)
+        : Entity(shared_ptr<Communication>(new NoCommunication()), max_relations)
+    {
+    }
+
     long int getId() const
     {
         return _id;

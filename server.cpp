@@ -175,8 +175,7 @@ void Server::handle_user_data(int fd, const string& data)
 void Server::handle_room_connect(int fd)
 {
     cout << "Adding room [" << fd << "]." << endl;
-    auto comm = shared_ptr<Communication>(new NoCommunication());
-    auto room = shared_ptr<Entity>(new Entity(comm, 1000));
+    auto room = shared_ptr<Entity>(new Entity(1000));
     room->setFd(fd);
     _rooms[fd] = room;
 }
@@ -190,8 +189,7 @@ void Server::handle_room_disconnect(int fd)
 void Server::handle_user_connect(int fd)
 {
     cout << "Adding user [" << fd << "]." << endl;
-    auto comm = shared_ptr<Communication>(new NoCommunication());
-    auto user = shared_ptr<Entity>(new Entity(comm, 1));
+    auto user = shared_ptr<Entity>(new Entity(1));
     user->setFd(fd);
     _users[fd] = user;
 }
