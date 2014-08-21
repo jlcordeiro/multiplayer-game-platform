@@ -19,18 +19,28 @@ int main(int argc, const char *argv[])
     auto u = shared_ptr<Entity>(new Entity(comm, 1));
 
 
-    auto print_buffer = [] (Entity& sender, const std::string& buffer)
+    auto print_buffer = [] (Entity& sender, const string& buffer)
                         { cout << "[" << sender.getName() << "] >> " << buffer << endl; };
 
-    auto handle_join = [&] (Entity& sender, const std::string& buffer)
+    auto handle_join = [&] (Entity& sender, const string& buffer)
                        { handleJoin(*getRoom(sender), buffer); };
 
-    auto handle_quit = [&] (Entity& sender, const std::string& buffer)
+    auto handle_quit = [&] (Entity& sender, const string& buffer)
                        { handleQuit(*getRoom(sender), buffer); };
+
+    auto handle_var = [] (Entity& sender, const std::string& buffer)
+    {
+        if (protocol::Var::validate(buffer)) {
+            std::string err;
+            auto json = Json::parse(buffer, err);
+            handleVariable(getRoom(sender)->relatives().get(), json[protocol::Var::tag]);
+        }
+    };
 
     u->acceptMessageVisitor(print_buffer);
     u->acceptMessageVisitor(handle_join);
     u->acceptMessageVisitor(handle_quit);
+    u->acceptMessageVisitor(handle_var);
 
 
     u->setName(user_name);

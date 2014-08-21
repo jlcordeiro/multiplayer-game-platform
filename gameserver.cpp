@@ -17,9 +17,19 @@ int main(int argc, const char *argv[])
     auto print_buffer = [] (Entity& sender, const std::string& buffer)
                         { cout << "[" << sender.getName() << "] >> " << buffer << endl; };
 
+    auto handle_var = [] (Entity& sender, const std::string& buffer)
+    {
+        if (protocol::Var::validate(buffer)) {
+            std::string err;
+            auto json = Json::parse(buffer, err);
+            handleVariable(sender.relatives().get(), json[protocol::Var::tag]);
+        }
+    };
+
     g->acceptMessageVisitor(print_buffer);
     g->acceptMessageVisitor(handleJoin);
     g->acceptMessageVisitor(handleQuit);
+    g->acceptMessageVisitor(handle_var);
 
     g->setName(string(argv[1]));
     g->setMaxRelatives(4);

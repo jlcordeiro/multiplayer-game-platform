@@ -98,17 +98,19 @@ class Var
 public:
     static const string tag;
     static const Json::shape shape;
+    static const string to_tag;
+    static const string from_tag;
 
     static bool validate(const string& msg)
     {
         return has_shape(msg, shape);
     }
 
-    static string str(const string& room_name, const string& name, const string& value)
+    static string str(const string& from, const string& to, const string& name, const string& value)
     {
-        return Json(Json::object({{tag, Json::object{{"from", room_name},
-                                                     {"name", name},
-                                                     {"value", value}}
+        return Json(Json::object({{tag, Json::object{{from_tag, from},
+                                                     {to_tag, to},
+                                                     {name, value}}
                                   }})).dump();
     }
 };

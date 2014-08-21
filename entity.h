@@ -26,16 +26,21 @@ shared_ptr<T> findByName(const map<int,shared_ptr<T>>& group, string name)
 template<class T>
 void handleVariable(shared_ptr<T> destiny, json11::Json object)
 {
-    string name = object["name"].string_value();
-    string value = object["value"].string_value();
-    destiny->setVariable(name, value);
+    for (auto o : object.object_items()) {
+        auto var_name = o.first;
+        if (var_name != protocol::Var::to_tag &&
+                var_name != protocol::Var::from_tag) {
+            string value = object[o.first].string_value();
+            destiny->setVariable(o.first, value);
+        }
+    }
 }
 
 template<class T>
 void handleVariable(const map<int,shared_ptr<T>>& group, json11::Json object)
 {
-    auto from = findByName<T>(group, object["from"].string_value());
-    handleVariable(from, object);
+    auto to = findByName<T>(group, object[protocol::Var::to_tag].string_value());
+    handleVariable(to, object);
 }
 
 class Communication
@@ -129,7 +134,7 @@ public:
         auto it = _variables.find(name);
         if (it == _variables.end() || it->second != value) {
             _variables[name] = value;
-            _communication->send(protocol::Var::str(getName(), name, value));
+            _communication->send(protocol::Var::str(getName(), getName(), name, value));
         }
     }
 

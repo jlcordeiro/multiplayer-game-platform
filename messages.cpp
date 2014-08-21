@@ -18,4 +18,6 @@ const Json::shape Quit::shape = {make_pair(Quit::tag, Json::OBJECT)};
 const Json::shape MaxUsers::shape = {make_pair(MaxUsers::tag, Json::NUMBER)};
 const Json::shape Var::shape = {make_pair(Var::tag, Json::OBJECT)};
 
+const string Var::to_tag = "to";
+const string Var::from_tag = "from";
 }

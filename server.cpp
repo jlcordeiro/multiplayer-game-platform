@@ -75,19 +75,19 @@ void Server::handle_room_data(int fd, const string& data)
         return;
     }
 
-    if (protocol::Var::validate(data)) {
-        handleVariable<Entity>(_rooms, json[protocol::Var::tag]);
-
-        for (auto room_entry : _rooms) {
-            auto room = room_entry.second;
-            send(room->getFd(), data);
-
-            for (auto user_entry : room->relatives().get()) {
-                send(user_entry.second->getFd(), data);
-            }
-        }
-    }
-
+//     if (protocol::Var::validate(data)) {
+//         handleVariable<Entity>(_rooms, json[protocol::Var::tag]);
+// 
+//         for (auto room_entry : _rooms) {
+//             auto room = room_entry.second;
+//             send(room->getFd(), data);
+// 
+//             for (auto user_entry : room->relatives().get()) {
+//                 send(user_entry.second->getFd(), data);
+//             }
+//         }
+//     }
+// 
 //     if (protocol::Var::validate(data)) {
 //         handleVariable<Entity>(_users, json[protocol::Var::tag]);
 // 
@@ -122,20 +122,25 @@ void Server::handle_user_data(int fd, const string& data)
             return;
         }
 
+        auto send_variables = [&](Entity& e)
+        {
+            for (auto varp : e.getVariables()) {
+                send(fd, protocol::Var::str("", e.getName(), varp.first, varp.second));
+            }
+        };
+
         Relatives<Entity>& relatives = room->relatives();
         if (relatives.add(user)) {
             room->broadcast(data);
-            // tell the new user who was already on the room
+            // tell the new user who was already on the room and its variables
             for (auto userpair : relatives.get()) {
                 auto ruser = userpair.second;
                 if (ruser->getName() != user->getName()) {
-                    send(fd, protocol::Join::str(room->getName(), userpair.second->getName()));
+                    send(fd, protocol::Join::str(room->getName(), ruser->getName()));
                 }
+                send_variables(*ruser);
             }
-            // send the room variables to the new user
-            for (auto varp : room->getVariables()) {
-                send(fd, protocol::Var::str(room->getName(), varp.first, varp.second));
-            }
+            send_variables(*room);
         }
         return;
     }
@@ -159,14 +164,11 @@ void Server::handle_user_data(int fd, const string& data)
     }
 
     if (protocol::Var::validate(data)) {
-        handleVariable<Entity>(_users, json[protocol::Var::tag]);
-
-        for (auto room_entry : _rooms) {
-            auto room = room_entry.second;
-            send(room->getFd(), data);
-
-            for (auto user_entry : room->relatives().get()) {
-                send(user_entry.second->getFd(), data);
+        string to_name = json[protocol::Var::tag][protocol::Var::to_tag].string_value();
+        if (user->getName() == to_name) {
+            handleVariable(user, json[protocol::Var::tag]);
+            for (auto room : _rooms) { // send only to the rooms containing the user.
+                room.second->broadcast(data);
             }
         }
     }
