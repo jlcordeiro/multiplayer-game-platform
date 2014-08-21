@@ -33,15 +33,12 @@ Server::Server(const char* rport, const char* uport)
         _users_socket.go();
         _rooms_socket.go();
 
-        for (auto up : _users) {
-            up.second->print();
-        }
+//         for (auto up : _users) {
+//             up.second->print();
+//         }
 
         for (auto rp : _rooms) {
-            auto r = rp.second;
-            if (r == nullptr) continue;
-
-            r->print();
+            rp.second->print();
         }
         cout << endl << endl;
 
@@ -74,7 +71,7 @@ void Server::handle_room_data(int fd, const string& data)
     }
 
     if (protocol::MaxUsers::validate(data)) {
-        room->setMaxRelations(json["maxUsers"].int_value());
+        room->setMaxRelatives(json["maxUsers"].int_value());
         return;
     }
 
@@ -85,11 +82,10 @@ void Server::handle_room_data(int fd, const string& data)
             auto room = room_entry.second;
             send(room->getFd(), data);
 
-            for (auto user_entry : room->getRelations()) {
+            for (auto user_entry : room->relatives().get()) {
                 send(user_entry.second->getFd(), data);
             }
         }
-
     }
 
 //     if (protocol::Var::validate(data)) {
@@ -122,35 +118,39 @@ void Server::handle_user_data(int fd, const string& data)
 
     if (protocol::Join::validate(data)) {
         auto room = findByName<Entity>(_rooms, json[protocol::Join::tag]["room"].string_value());
-        if (room && !room->containsRelation(user)
-                 && room->getRelationCount() < room->getMaxRelations()) {
+        if (!room) {
+            return;
+        }
 
-            send(room->getFd(), data);
-            for (auto userpair : room->getRelations()) {
-                send(userpair.second->getFd(), data);
-                // tell the new user who was already on the room
-                send(fd, protocol::Join::str(room->getName(), userpair.second->getName()));
+        Relatives<Entity>& relatives = room->relatives();
+        if (relatives.add(user)) {
+            room->broadcast(data);
+            // tell the new user who was already on the room
+            for (auto userpair : relatives.get()) {
+                auto ruser = userpair.second;
+                if (ruser->getName() != user->getName()) {
+                    send(fd, protocol::Join::str(room->getName(), userpair.second->getName()));
+                }
             }
             // send the room variables to the new user
             for (auto varp : room->getVariables()) {
                 send(fd, protocol::Var::str(room->getName(), varp.first, varp.second));
             }
-
-            // add the user to the room
-            room->addRelation(user);
         }
         return;
     }
 
     if (protocol::Quit::validate(data)) {
         auto room = findByName<Entity>(_rooms, json[protocol::Quit::tag]["room"].string_value());
-        if (room && room->containsRelation(user)) {
-            room->removeRelation(user);
+        if (!room) {
+            return;
+        }
 
-            send(room->getFd(), data);
-            for (auto userpair : room->getRelations()) {
-                send(userpair.second->getFd(), data);
-                // tell the new user who was already on the room
+        Relatives<Entity>& relatives = room->relatives();
+        if (relatives.remove(user)) {
+            room->broadcast(data);
+            // tell the new user who was already on the room
+            for (auto userpair : relatives.get()) {
                 send(fd, protocol::Quit::str(room->getName(), userpair.second->getName()));
             }
         }
@@ -165,7 +165,7 @@ void Server::handle_user_data(int fd, const string& data)
             auto room = room_entry.second;
             send(room->getFd(), data);
 
-            for (auto user_entry : room->getRelations()) {
+            for (auto user_entry : room->relatives().get()) {
                 send(user_entry.second->getFd(), data);
             }
         }
@@ -212,11 +212,11 @@ void Server::handle_user_disconnect(int fd)
         const string& room_name = room->getName();
 
         announce_quit(fd, room_name);
-        for (auto userpair : room->getRelations()) {
+        for (auto userpair : room->relatives().get()) {
             announce_quit(userpair.second->getFd(), room_name);
         }
 
-        room->removeRelation(user);
+        room->relatives().remove(user);
     }
 
     // delete user

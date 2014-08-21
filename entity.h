@@ -7,6 +7,7 @@
 #include <json11/json11.hpp>
 #include "tcpsocket.h"
 #include "messages.h"
+#include "relatives.h"
 using namespace std;
 
 template<class T>
@@ -62,6 +63,7 @@ public:
 };
 
 
+
 class Entity : public enable_shared_from_this<Entity>
 {
 public:
@@ -72,8 +74,7 @@ public:
           _fd(-1),
           _name(""),
           _communication(c),
-          _max_relations(max_relations),
-          _relation_count(0)
+          _relatives(max_relations)
     {
     }
 
@@ -132,53 +133,6 @@ public:
         }
     }
 
-    long int getRelationCount() const
-    {
-        return _relation_count;
-    }
-
-    long int getMaxRelations() const
-    {
-        return _max_relations;
-    }
-
-    void setMaxRelations(long int value)
-    {
-        _max_relations = value;
-        _communication->send(protocol::MaxUsers::str(value));
-    }
-
-    void addRelation(shared_ptr<Entity> e)
-    {
-        if (!containsRelation(e)) {
-            _relations[e->getId()] = e;
-            _relation_count++;
-        }
-    }
-
-    bool containsRelation(shared_ptr<Entity> e) const
-    {
-        return (_relations.find(e->getId()) != _relations.end());
-    }
-
-    void removeRelation(shared_ptr<Entity> e)
-    {
-        if (containsRelation(e)) {
-            _relations.erase(e->getId());
-            _relation_count--;
-        }
-    }
-
-    shared_ptr<Entity> getRelationByName(const string& name)
-    {
-        return findByName<Entity>(_relations, name);
-    }
-
-    map<int, shared_ptr<Entity>>& getRelations()
-    {
-        return _relations;
-    }
-
     void acceptMessageVisitor(Visitor visitor)
     {
         _message_visitors.push_back(visitor);
@@ -190,14 +144,31 @@ public:
 
     void joinRoom(const string& name)
     {
-        auto comm = shared_ptr<Communication>(new NoCommunication());
-        auto room = shared_ptr<Entity>(new Entity(comm, 1000));
+        auto room = shared_ptr<Entity>(new Entity(1000));
         room->setName(name);
 
-        addRelation(room);
-        room->addRelation(this->shared_from_this());
+        _relatives.add(room);
 
         _communication->send(protocol::Join::str(name, getName()));
+    }
+
+    void setMaxRelatives(long int value)
+    {
+        _relatives.limit(value);
+        _communication->send(protocol::MaxUsers::str(value));
+    }
+
+    Relatives<Entity>& relatives()
+    {
+        return _relatives;
+    }
+
+    void broadcast(const string& msg) const
+    {
+        send(_fd, msg);
+        for (auto pair : _relatives.get()) {
+            send(pair.second->getFd(), msg);
+        }
     }
 
 private:
@@ -211,11 +182,9 @@ private:
 
     shared_ptr<Communication> _communication;
 
-    map<int, shared_ptr<Entity>> _relations;
-    long unsigned int _max_relations;
-    long unsigned int _relation_count;
-
     vector<Visitor> _message_visitors;
+
+    Relatives<Entity> _relatives;
 };
 
 void handleJoin(Entity& room, const std::string& buffer);

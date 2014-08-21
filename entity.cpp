@@ -10,7 +10,7 @@ void Entity::print()
         cout << "~ " << varp.first << " => " << varp.second << endl;
     }
 
-    for (auto u : _relations) {
+    for (auto u : _relatives.get()) {
         cout << "<<< [R] " << u.second->getName() << endl;
         for (auto varp : u.second->getVariables()) {
             cout << "      - " << varp.first << " => " << varp.second << endl;
@@ -22,8 +22,7 @@ void Entity::dispatch()
 {
     while (1) {
         vector<string> new_messages;
-        int res = _communication->recv(new_messages);
-        if (res < 0) {
+        if (_communication->recv(new_messages) < 0) {
             return;
         }
 
@@ -43,10 +42,9 @@ void handleJoin(Entity& room, const std::string& buffer)
         string err;
         auto json = Json::parse(buffer, err);
         string user_name = json[protocol::Join::tag]["user"].string_value();
-        auto comm = shared_ptr<Communication>(new NoCommunication());
-        auto user = shared_ptr<Entity>(new Entity(comm, 1));
+        auto user = shared_ptr<Entity>(new Entity(1));
         user->setName(user_name);
-        room.addRelation(user);
+        room.relatives().add(user);
     }
 }
 
@@ -56,16 +54,12 @@ void handleQuit(Entity& room, const std::string& buffer)
         string err;
         auto json = Json::parse(buffer, err);
         string user_name = json[protocol::Quit::tag]["user"].string_value();
-        auto user = room.getRelationByName(user_name);
-        room.removeRelation(user);
+        auto user = findByName<Entity>(room.relatives().get(), user_name);
+        room.relatives().remove(user);
     }
 }
 
 shared_ptr<Entity> getRoom(Entity& e)
 {
-    if (e.getRelationCount() > 0) {
-        return e.getRelations().begin()->second;
-    }
-
-    return nullptr;
+    return e.relatives().get().begin()->second;
 }

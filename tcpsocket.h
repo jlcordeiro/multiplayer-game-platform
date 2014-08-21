@@ -109,7 +109,7 @@ public:
         close(_fd);
     }
 
-    int send(const string& msg)
+    int send(const string& msg) const
     {
         return ::send(_fd, msg);
     }

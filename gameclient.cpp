@@ -39,7 +39,7 @@ int main(int argc, const char *argv[])
 
     thread dispatch([&](){u->dispatch();});
 
-    auto my_room = u->getRelationByName(room_name);
+    auto my_room = findByName<Entity>(u->relatives().get(), room_name);
     while (true) {
         my_room->print();
         usleep(500000);

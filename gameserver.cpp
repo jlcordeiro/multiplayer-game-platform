@@ -22,7 +22,7 @@ int main(int argc, const char *argv[])
     g->acceptMessageVisitor(handleQuit);
 
     g->setName(string(argv[1]));
-    g->setMaxRelations(4);
+    g->setMaxRelatives(4);
     g->setVariable("var1", string(argv[2]));
 
     thread dispatch([&](){g->dispatch();});
