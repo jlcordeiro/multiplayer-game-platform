@@ -40,7 +40,9 @@ template<class T>
 void handleVariable(const map<int,shared_ptr<T>>& group, json11::Json object)
 {
     auto to = findByName<T>(group, object[protocol::Var::to_tag].string_value());
-    handleVariable(to, object);
+    if (to) {
+        handleVariable(to, object);
+    }
 }
 
 class Communication

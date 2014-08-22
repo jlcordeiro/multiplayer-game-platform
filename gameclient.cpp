@@ -32,8 +32,14 @@ int main(int argc, const char *argv[])
     {
         if (protocol::Var::validate(buffer)) {
             std::string err;
-            auto json = Json::parse(buffer, err);
-            handleVariable(getRoom(sender)->relatives().get(), json[protocol::Var::tag]);
+            auto object = Json::parse(buffer, err)[protocol::Var::tag];
+            handleVariable(getRoom(sender)->relatives().get(), object);
+
+            auto to_name = object[protocol::Var::to_tag].string_value();
+            auto my_room = getRoom(sender);
+            if (my_room->getName() == to_name) {
+                handleVariable(my_room, object);
+            }
         }
     };
 

@@ -75,31 +75,13 @@ void Server::handle_room_data(int fd, const string& data)
         return;
     }
 
-//     if (protocol::Var::validate(data)) {
-//         handleVariable<Entity>(_rooms, json[protocol::Var::tag]);
-// 
-//         for (auto room_entry : _rooms) {
-//             auto room = room_entry.second;
-//             send(room->getFd(), data);
-// 
-//             for (auto user_entry : room->relatives().get()) {
-//                 send(user_entry.second->getFd(), data);
-//             }
-//         }
-//     }
-// 
-//     if (protocol::Var::validate(data)) {
-//         handleVariable<Entity>(_users, json[protocol::Var::tag]);
-// 
-//         for (auto room_entry : _rooms) {
-//             auto room = room_entry.second;
-//             send(room->getFd(), data);
-// 
-//             for (auto user_entry : room->getRelations()) {
-//                 send(user_entry.second->getFd(), data);
-//             }
-//         }
-//     }
+    if (protocol::Var::validate(data)) {
+        string to_name = json[protocol::Var::tag][protocol::Var::to_tag].string_value();
+        if (room->getName() == to_name) {
+            handleVariable(room, json[protocol::Var::tag]);
+            room->broadcast(data);
+        }
+    }
 }
 
 void Server::handle_user_data(int fd, const string& data)

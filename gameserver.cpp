@@ -21,8 +21,8 @@ int main(int argc, const char *argv[])
     {
         if (protocol::Var::validate(buffer)) {
             std::string err;
-            auto json = Json::parse(buffer, err);
-            handleVariable(sender.relatives().get(), json[protocol::Var::tag]);
+            auto object = Json::parse(buffer, err)[protocol::Var::tag];
+            handleVariable(sender.relatives().get(), object);
         }
     };
 

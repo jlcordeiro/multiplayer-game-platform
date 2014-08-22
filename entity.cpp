@@ -26,8 +26,8 @@ void Entity::dispatch()
             return;
         }
 
-        for (auto visitor : _message_visitors) {
-            for (auto buffer : new_messages) {
+        for (auto buffer : new_messages) {
+            for (auto visitor : _message_visitors) {
                 visitor(*this, buffer);
             }
         }
