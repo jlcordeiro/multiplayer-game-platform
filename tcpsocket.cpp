@@ -3,6 +3,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include "tcpsocket.h"
+#include <anet/anet.h>
+
+int anetTcpConnect(char *err, const char *addr, int port);
+int anetTcpNonBlockConnect(char *err, const char *addr, int port);
+int anetTcpServer(char *err, int port, const char *bindaddr);
 
 int TCPServer::recv_connection()
 {
@@ -70,7 +75,7 @@ void TCPServer::recv_data(int socket)
 }
 
 TCPServer::TCPServer(const char* port)
-    :   _listener(create_socket(port)),
+    :   _listener(anetTcpServer(NULL, atoi(port), NULL)),
         _fdmax(_listener)
 {
     if (_listener == -1) {
@@ -132,6 +137,20 @@ void TCPServer::set_disconnect_fn(shared_ptr<conn_fn_t> f)
 }
 
 // -----
+
+TCPClient::TCPClient(const char* host, int port, bool block = true)
+    : _block(block)
+{
+    if (block) {
+        _fd = anetTcpConnect(NULL, host, port);
+    } else {
+        _fd = anetTcpNonBlockConnect(NULL, host, port);
+    }
+
+    if (_fd < 0) {
+        throw _fd;
+    }
+}
 
 int TCPClient::recv(vector<string>& recv_messages)
 {

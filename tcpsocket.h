@@ -12,7 +12,6 @@
 #include <strings.h>
 #include <functional>
 #endif
-#include "psocket.h"
 using namespace std;
 
 typedef function<void(int)> conn_fn_t;
@@ -21,6 +20,7 @@ typedef function<void(int, const string&)> data_fn_t;
 typedef shared_ptr<function<void(int, const string&)>> sp_data_fn_t;
 
 enum {BUF_SIZE = 2048};
+
 
 class TCPServer {
     private:
@@ -91,18 +91,7 @@ private:
     const bool _block;
 
 public:
-    TCPClient(const char* host, int port, bool block = true)
-        : _fd(connect_to_socket(host, port)),
-          _block(block)
-    {
-        if (_fd < 0) {
-            throw _fd;
-        }
-
-        if (!_block) {
-            fcntl(_fd, F_SETFL, fcntl(_fd, F_GETFL) | O_NONBLOCK);
-        }
-    }
+    TCPClient(const char* host, int port, bool block);
 
     ~TCPClient()
     {
