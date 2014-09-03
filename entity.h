@@ -2,7 +2,7 @@
 #define ENTITY_H
 
 #include <string>
-#include <vector>
+#include <queue>
 #include <map>
 #include <json11/json11.hpp>
 #include "tcpsocket.h"
@@ -49,14 +49,14 @@ class Communication
 {
 public:
     virtual int send(const string& msg) = 0;
-    virtual int recv(vector<string>& recv_messages) = 0;
+    virtual int recv(queue<string>& recv_messages) = 0;
 };
 
 class NoCommunication : public Communication
 {
 public:
     int send(const string& msg) override {return 0;}
-    int recv(vector<string>& recv_messages) override {return 0;}
+    int recv(queue<string>& recv_messages) override {return 0;}
 };
 
 class TCPCommunication : public Communication
@@ -66,7 +66,7 @@ private:
 public:
     TCPCommunication(TCPClient& s) : _socket(s) {}
     int send(const string& msg) override {return _socket.send(msg);}
-    int recv(vector<string>& recv_messages) override {return _socket.recv(recv_messages);}
+    int recv(queue<string>& recv_messages) override {return _socket.recv(recv_messages);}
 };
 
 

@@ -2,7 +2,7 @@
 #define TCPSOCKET_H
 
 #include <map>
-#include <vector>
+#include <queue>
 #include <string>
 #include <unistd.h>
 #include <fcntl.h>
@@ -104,12 +104,12 @@ public:
     }
 
     /**
-     * \brief Read from the socket, creating a vector with the strings read.
+     * \brief Read from the socket, creating a queue with the strings read.
      * \return  -1 if the socket had an error or was closed.
      *          0 if nothing was read but socket is still open.
      *          >0 if something was read. This value is the number of characters read.
      */
-    int recv(vector<string>& recv_messages);
+    int recv(queue<string>& recv_messages);
 };
 
 #endif

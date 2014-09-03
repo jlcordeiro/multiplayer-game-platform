@@ -21,15 +21,17 @@ void Entity::print()
 void Entity::dispatch()
 {
     while (1) {
-        vector<string> new_messages;
+        queue<string> new_messages;
         if (_communication->recv(new_messages) < 0) {
             return;
         }
 
-        for (auto buffer : new_messages) {
+        while (!new_messages.empty()) {
+            auto buffer = new_messages.front();
             for (auto visitor : _message_visitors) {
                 visitor(*this, buffer);
             }
+            new_messages.pop();
         }
 
         usleep(100000);

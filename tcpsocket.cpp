@@ -30,22 +30,22 @@ int TCPServer::recv_connection()
     return newfd;
 }
 
-static vector<string> split_string(const string& str)
+static queue<string> split_string(const string& str)
 {
-    vector<string> strings;
+    queue<string> strings;
 
     string::size_type pos = 0;
     string::size_type prev = 0;
     while ((pos = str.find("\n", prev)) != string::npos)
     {
-        strings.push_back(str.substr(prev, pos - prev));
+        strings.push(str.substr(prev, pos - prev));
         prev = pos + 1;
     }
 
     // To get the last substring (or only, if delimiter is not found)
     string new_str = str.substr(prev);
     if (new_str.size() > 0) {
-        strings.push_back(new_str);
+        strings.push(new_str);
     }
 
     return strings;
@@ -66,9 +66,10 @@ void TCPServer::recv_data(int socket)
         buf[nbytes-2] = '\0'; // remove \r\n
 
         auto tokens = split_string(string(buf));
-        for (auto sbuf : tokens) {
-            if (auto pfn = _data_fn.lock()) {
-                (*pfn)(socket, sbuf);
+        if (auto pfn = _data_fn.lock()) {
+            while (!tokens.empty()) {
+                (*pfn)(socket, tokens.front());
+                tokens.pop();
             }
         }
     }
@@ -152,7 +153,7 @@ TCPClient::TCPClient(const char* host, int port, bool block = true)
     }
 }
 
-int TCPClient::recv(vector<string>& recv_messages)
+int TCPClient::recv(queue<string>& recv_messages)
 {
     char buffer[BUF_SIZE];
     bzero(buffer, BUF_SIZE);
@@ -169,10 +170,7 @@ int TCPClient::recv(vector<string>& recv_messages)
         return -1;
     }
 
-    auto tokens = split_string(string(buffer));
-    for (auto sbuf : tokens) {
-        recv_messages.push_back(sbuf);
-    }
+    recv_messages = split_string(string(buffer));
 
     return 0;
 }
